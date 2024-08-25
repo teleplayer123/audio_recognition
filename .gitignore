@@ -2,3 +2,4 @@ data
 datasets
 venv
 testing
+__pycache__
