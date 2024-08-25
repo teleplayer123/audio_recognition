@@ -37,4 +37,10 @@ history = model.fit(
     callbacks=tf.keras.callbacks.EarlyStopping(verbose=1, patience=2),
 )
 
+outdir = os.path.join(os.getcwd(), "models")
+if not os.path.exists(outdir):
+  os.mkdir(outdir)
+  
+tf.saved_model.save(model, export_dir=outdir)
+
 plot_history(history)
