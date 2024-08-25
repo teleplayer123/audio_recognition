@@ -4,7 +4,7 @@ import numpy as np
 from audio_processing import train_val_test_label_data, make_spec_ds, build_audio_recognition_model, plot_history, take_first
 
 
-data_dir = os.path.join(os.getcwd(), "datasets", "mini_speech_commands")
+data_dir = os.path.join(os.getcwd(), "data", "mini_speech_commands")
 train_ds, val_ds, label_names = train_val_test_label_data(data_dir)
 
 def squeeze(audio, labels):
