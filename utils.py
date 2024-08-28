@@ -50,3 +50,15 @@ def load_wav_16k_mono(fname):
     n_samples = round(len(data) * rate_out / sample_rate)
     wav = sps.resample(data, n_samples)
     return wav
+
+def add_white_noise(audio):
+    #generate noise and the scalar multiplier
+    noise = tf.random.uniform(shape=tf.shape(audio), minval=-1, maxval=1)
+    noise_scalar = tf.random.uniform(shape=[1], minval=0, maxval=0.2)
+
+    # add them to the original audio
+    audio_with_noise = audio + (noise * noise_scalar)
+
+    # final clip the values to ensure they are still between -1 and 1
+    audio_with_noise = tf.clip_by_value(audio_with_noise, clip_value_min=-1, clip_value_max=1)
+    return audio_with_noise
