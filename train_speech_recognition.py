@@ -44,17 +44,17 @@ save_tf_model(model)
 # plot_history(history)
 
 #extract weights and biases from model
-weights_and_biases = {}
-for i, layer in enumerate(model.layers):
-    weights_biases = layer.get_weights()
-    if len(weights_biases) < 1:
-        continue
-    weights = weights_biases[0]
-    biases = weights_biases[1]
-    weights_and_biases[f'w{i}'] = weights
-    weights_and_biases[f'b{i}'] = biases
+# weights_and_biases = {}
+# for i, layer in enumerate(model.layers):
+#     weights_biases = layer.get_weights()
+#     if len(weights_biases) < 1:
+#         continue
+#     weights = weights_biases[0]
+#     biases = weights_biases[1]
+#     weights_and_biases[f'w{i}'] = weights
+#     weights_and_biases[f'b{i}'] = biases
 
-# Save the weights and biases to a file
-fname = "model_weights_biases.npz"
-path = os.path.join(os.getcwd(), "models", fname)
-np.savez(path, **weights_and_biases)
+# # Save the weights and biases to a file
+# fname = "model_weights_biases.npz"
+# path = os.path.join(os.getcwd(), "models", fname)
+# np.savez(path, **weights_and_biases)
