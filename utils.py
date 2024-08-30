@@ -93,12 +93,12 @@ def save_tf_model(model, outdir="models"):
         os.mkdir(save_dir)
     tf.saved_model.save(model, save_dir)
 
-def convert_tflite_int8(saved_model_dir, input_shape=(124, 129, 1), n_outputs=130, outdir="models"):
+def convert_tflite_int8(saved_model_dir, input_shape=(124, 129, 1), n_outputs=8, outdir="models"):
     def representative_dataset():
         for _ in range(n_outputs):
             data = np.random.rand(1, input_shape[0], input_shape[1], input_shape[2])
             yield [data.astype(np.float32)]
-              
+
     file_path = os.path.join(os.getcwd(), outdir, "model.tflite")
     converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
