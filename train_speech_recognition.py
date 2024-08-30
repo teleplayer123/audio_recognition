@@ -1,15 +1,16 @@
 import os
 import tensorflow as tf
 import numpy as np
-from audio_processing import train_val_test_label_data, make_spec_ds, build_audio_recognition_model, plot_history, take_first
+from audio_processing import train_val_label_data, make_spec_ds, build_audio_recognition_model, plot_history, take_first
+from utils import save_labels, convert_model_to_tflite, save_tf_model
 
 
 data_dir = os.path.join(os.getcwd(), "data", "mini_speech_commands")
-train_ds, val_ds, label_names = train_val_test_label_data(data_dir)
+train_ds, val_ds, label_names = train_val_label_data(data_dir)
 
 def squeeze(audio, labels):
-  audio = tf.squeeze(audio, axis=-1)
-  return audio, labels
+	audio = tf.squeeze(audio, axis=-1)
+	return audio, labels
 
 train_ds = train_ds.map(squeeze, tf.data.AUTOTUNE)
 val_ds = val_ds.map(squeeze, tf.data.AUTOTUNE)
@@ -27,20 +28,18 @@ val_spectrogram_ds = val_spectrogram_ds.cache().prefetch(tf.data.AUTOTUNE)
 test_spectrogram_ds = test_spectrogram_ds.cache().prefetch(tf.data.AUTOTUNE)
 
 input_shape = tmp_ds.shape[1:]
+print("Input Shape: {}".format(input_shape))
+save_labels(label_names)
 
 model = build_audio_recognition_model(input_shape, train_spectrogram_ds, label_names)
 
 history = model.fit(
-    train_spectrogram_ds,
-    validation_data=val_spectrogram_ds,
-    epochs=10,
-    callbacks=tf.keras.callbacks.EarlyStopping(verbose=1, patience=2),
+		train_spectrogram_ds,
+		validation_data=val_spectrogram_ds,
+		epochs=10,
+		callbacks=tf.keras.callbacks.EarlyStopping(verbose=1, patience=2),
 )
 
-outdir = os.path.join(os.getcwd(), "models")
-if not os.path.exists(outdir):
-  os.mkdir(outdir)
-  
-tf.saved_model.save(model, export_dir=outdir)
+save_tf_model(model)
 
-plot_history(history)
+# plot_history(history)

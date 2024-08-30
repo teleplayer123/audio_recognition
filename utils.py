@@ -8,6 +8,10 @@ import tensorflow as tf
 import numpy as np
 
 
+#####################################
+#       Audio Play/Processing       #
+#####################################
+
 def play_wavfile(fname):
     chunk = 1024  
     wf = wave.open(fname, 'rb')
@@ -60,3 +64,57 @@ def add_white_noise(audio):
     # final clip the values to ensure they are still between -1 and 1
     audio_with_noise = tf.clip_by_value(audio_with_noise, clip_value_min=-1, clip_value_max=1)
     return audio_with_noise
+
+
+#####################################
+#       Convert/Save Functions      #
+#####################################
+
+def convert_saved_model_to_tflite(saved_model_dir):
+    file_path = os.path.join(os.getcwd(), "models", "model.tflite")
+    converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+    tflite_model = converter.convert()
+    with open(file_path, "wb") as fh:
+        fh.write(tflite_model)
+
+def convert_model_to_tflite(model, outdir="models"):
+    file_path = os.path.join(os.getcwd(), outdir, "model.tflite")
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+    tflite_model = converter.convert()
+    with open(file_path, "wb") as fh:
+        fh.write(tflite_model)
+
+def save_tf_model(model, outdir="models"):
+    model_dir = os.path.join(os.getcwd(), outdir)
+    if not os.path.exists(model_dir):
+        os.mkdir(model_dir)
+    save_dir = os.path.join(model_dir, "saved_models")
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    tf.saved_model.save(model, save_dir)
+
+def convert_tflite_int8(saved_model_dir, input_shape=(124, 129, 1), n_outputs=130, outdir="models"):
+    def representative_dataset():
+        for _ in range(n_outputs):
+            data = np.random.rand(1, input_shape[0], input_shape[1], input_shape[2])
+            yield [data.astype(np.float32)]
+              
+    file_path = os.path.join(os.getcwd(), outdir, "model.tflite")
+    converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+    converter.representative_dataset = representative_dataset
+    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+    converter.inference_input_type = tf.uint8
+    converter.inference_output_type = tf.uint8
+    tflite_quant_model = converter.convert()
+    with open(file_path, "wb") as fh:
+        fh.write(tflite_quant_model)
+
+def save_labels(labels, outfile="labels.txt"):
+	savedir = os.path.join(os.getcwd(), "models")
+	if not os.path.exists(savedir):
+		os.mkdir(savedir)
+	save_path = os.path.join(savedir, outfile)
+	if not isinstance(labels, type(np.array)):
+		labels = np.array(labels)
+	labels.tofile(save_path, sep="\n")
