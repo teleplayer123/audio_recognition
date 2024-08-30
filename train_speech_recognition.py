@@ -2,7 +2,7 @@ import os
 import tensorflow as tf
 import numpy as np
 from audio_processing import train_val_label_data, make_spec_ds, build_audio_recognition_model, plot_history, take_first
-from utils import save_labels, convert_model_to_tflite, save_tf_model
+from utils import save_labels, save_tf_model
 
 
 data_dir = os.path.join(os.getcwd(), "data", "mini_speech_commands")
