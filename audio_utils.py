@@ -13,7 +13,6 @@ def downsample_waveform(waveform, num_bins):
         start_index = i * points_per_bin
         end_index = start_index + points_per_bin
         downsampled_waveform[i] = waveform[start_index:end_index].mean()
-    
     return downsampled_waveform.tolist()
 
 
