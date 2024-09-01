@@ -4,11 +4,14 @@ import tensorflow as tf
 import scipy.signal as sps
 from scipy.io import wavfile
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.svm import LinearSVC
+from sklearn.linear_model import SGDClassifier
+import m2cgen
 
 
 
-
-data_dir = os.path.join(os.getcwd(), "data", "mini_speech_commands")
+data_dir = os.path.join(os.getcwd(), "rgb_wavs", "rgb")
 
 def downsample_waveform(waveform, num_bins):
     waveform = np.array(waveform)
@@ -59,11 +62,11 @@ def load_data(data_dir):
         label_dir = os.path.join(data_dir, dirname)
         if not dirname in labels:
             labels.append(dirname)
-        wav_files = [os.path.join(label_dir, fname) for fname in os.listdir(label_dir)]
+        wav_files = [os.path.join(label_dir, fname) for fname in os.listdir(label_dir)[:4]]
         feature_arr = []
         for wav_file in wav_files:
             xfeatures = extract_features(wav_file)
-            feature_arr.append(xfeatures)
+            feature_arr.extend(xfeatures)
         waveforms.append(np.array(feature_arr))
         del feature_arr
     return np.array(waveforms), np.array(labels)
@@ -76,4 +79,24 @@ print(np.shape(labels))
 
 x, y = audio_data, labels
 
+# x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
+# print(x_train.shape)
+# print(x_test.shape)
+# print(y_train.shape)
+# print(y_test.shape)
+# print(x.shape)
+# print(y.shape)
+
+# new_shape = x.shape[1]*x.shape[2]
+# x = np.reshape(x, (3, new_shape))
+# y = np.ravel(y)
+model = SGDClassifier()
+model.fit(x, y)
+score = model.score(x, y)
+print(score)
+
+code = m2cgen.export_to_python(model)
+
+with open("svm_clf.py", "w") as fh:
+    fh.write(code)
