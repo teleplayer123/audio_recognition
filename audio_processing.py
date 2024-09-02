@@ -4,6 +4,8 @@ import numpy as np
 import seaborn as sns
 import tensorflow as tf
 import tensorflow_io as tfio
+import scipy.signal as sps
+from scipy.io import wavfile
 
 
 @tf.function
@@ -187,3 +189,60 @@ def build_audio_recognition_model(input_shape, train_ds, labels):
 	)
 	return model
 
+def downsample_waveform(waveform, num_bins):
+    waveform = np.array(waveform)
+    original_length = len(waveform)
+    points_per_bin = original_length // num_bins
+    downsampled_waveform = np.zeros(num_bins)
+    for i in range(num_bins):
+        start_index = i * points_per_bin
+        end_index = start_index + points_per_bin
+        downsampled_waveform[i] = waveform[start_index:end_index].mean()
+    return downsampled_waveform.tolist()
+
+def add_white_noise(audio):
+    #generate noise and the scalar multiplier
+    noise = tf.random.uniform(shape=tf.shape(audio), minval=-1, maxval=1)
+    noise_scalar = tf.random.uniform(shape=[1], minval=0, maxval=0.2)
+    # add them to the original audio
+    audio_with_noise = audio + (noise * noise_scalar)
+    # final clip the values to ensure they are still between -1 and 1
+    audio_with_noise = tf.clip_by_value(audio_with_noise, clip_value_min=-1, clip_value_max=1)
+    return audio_with_noise
+
+def extract_features(audio_file_path, window_size=1024, overlap=0, num_bins=16):
+    sample_rate, audio_data = wavfile.read(audio_file_path)
+    resampled_audio = sps.resample(audio_data, sample_rate)
+    # Add white noise to the audio
+    augmented_audio = add_white_noise(resampled_audio)
+    step_size = window_size - overlap
+    num_windows = (len(augmented_audio) - window_size) // step_size + 1
+    fft_results = []
+    for i in range(num_windows):
+        start_index = i * step_size
+        end_index = start_index + window_size
+        windowed_signal = augmented_audio[start_index:end_index]
+        
+        fft_result = np.fft.fft(windowed_signal)
+        fft_result = fft_result[0:int(fft_result.shape[0] / 2)]
+        fft_magnitude = np.abs(fft_result)
+        fft_magnitude[0] = 0
+        fft_magnitude = downsample_waveform(fft_magnitude, num_bins)
+        fft_results.extend(fft_magnitude)
+    return np.array(fft_results)
+
+def load_data(data_dir):
+    waveforms = []
+    labels = []
+    for dirname in os.listdir(data_dir):
+        label_dir = os.path.join(data_dir, dirname)
+        if not dirname in labels:
+            labels.append(dirname)
+        wav_files = [os.path.join(label_dir, fname) for fname in os.listdir(label_dir)]
+        feature_arr = []
+        for wav_file in wav_files:
+            xfeatures = extract_features(wav_file)
+            feature_arr.append(xfeatures)
+        waveforms.append(np.array(feature_arr))
+        del feature_arr
+    return np.array(waveforms), np.array(labels)
