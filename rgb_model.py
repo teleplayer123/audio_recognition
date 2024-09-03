@@ -96,7 +96,7 @@ model.fit(x, y)
 score = model.score(x, y)
 print(score)
 
-# code = m2cgen.export_to_python(model)
+code = m2cgen.export_to_python(model)
 
-# with open("svm_clf.py", "w") as fh:
-#     fh.write(code)
+with open("svm_clf.py", "w") as fh:
+    fh.write(code)
