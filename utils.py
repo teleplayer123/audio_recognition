@@ -65,6 +65,13 @@ def add_white_noise(audio):
     audio_with_noise = tf.clip_by_value(audio_with_noise, clip_value_min=-1, clip_value_max=1)
     return audio_with_noise
 
+def convert_spectrogram(x):
+    fft_size = 1024
+    num_rows = len(x) // fft_size
+    spectrogram = np.zeros((num_rows, fft_size))
+    for i in range(num_rows):
+        spectrogram[i,:] = 10*np.log10(np.abs(np.fft.fftshift(np.fft.fft(x[i*fft_size:(i+1)*fft_size])))**2)
+    return spectrogram
 
 #####################################
 #       Convert/Save Functions      #

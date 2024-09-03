@@ -62,3 +62,11 @@ def load_data(data_dir):
         waveforms.append(np.array(feature_arr))
         del feature_arr
     return np.array(waveforms), np.array(labels)
+
+def convert_spectrogram(x):
+    fft_size = 1024
+    num_rows = len(x) // fft_size
+    spectrogram = np.zeros((num_rows, fft_size))
+    for i in range(num_rows):
+        spectrogram[i,:] = 10*np.log10(np.abs(np.fft.fftshift(np.fft.fft(x[i*fft_size:(i+1)*fft_size])))**2)
+    return spectrogram
