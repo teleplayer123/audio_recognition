@@ -125,3 +125,19 @@ def save_labels(labels, outfile="labels.txt"):
 	if not isinstance(labels, type(np.array)):
 		labels = np.array(labels)
 	labels.tofile(save_path, sep="\n")
+
+
+############################################
+#          Audio Signal Processing         #
+############################################
+
+def get_noise(n):
+    noise = (np.random.rand(n) + 1j * np.random.randn(n)) / np.sqrt(2)
+    return noise
+
+def spectrogram(audio, fft_size=1024, sr=8000):
+    noise = get_noise(fft_size)
+    audio_aug = audio + noise
+    spec = np.fft.fftshift(np.fft.fft(audio_aug))
+    mag = 10*np.log10(np.abs(spec)**2)
+    return mag
