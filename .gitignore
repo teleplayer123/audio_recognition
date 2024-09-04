@@ -4,3 +4,4 @@ venv
 testing
 __pycache__
 saved
+test_data
