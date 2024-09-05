@@ -29,13 +29,13 @@ def read_audio_data(a):
     return np.array(data)
 
 def get_spectrogram(data):
-    spec = ulab.utils.spectrogram(data)
+    spect = ulab.utils.spectrogram(data)
     spect[0] = 0
     return spect
 
 def avg_spectrogram(data, n_bins):
     n_chunks = len(data) // n_bins
-    res = [np.mean(data[i*n_bins:(i+1)*nbins]) for i in range(n_chunks)]
+    res = [np.mean(data[i*n_bins:(i+1)*n_bins]) for i in range(n_chunks)]
     return res
 
 def convert_spectrogram(data):
@@ -52,7 +52,7 @@ def convert_spectrogram(data):
         mspec = avg_spectrogram(spec, n_bins)
         res.extend(mspec)
     res = np.array(res)
-    np.savetxt("/sd/audio1.txt", res)
+    np.savetxt("/sd/spectrogram1.txt", res)
     res_min = np.min(res)
     res_max = np.max(res)
     res = (res - res_min) / (res_max - res_min)
@@ -97,7 +97,7 @@ a0 = ADC(Pin(26))
 data = read_audio_data(a0)
 spectrogram = convert_spectrogram(data)
 
-# np.savetxt("/sd/audio1.txt", data)
+np.savetxt("/sd/res1.txt", spectrogram)
     
     
 
