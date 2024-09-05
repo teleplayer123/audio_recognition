@@ -52,7 +52,7 @@ def convert_spectrogram(data):
         mspec = avg_spectrogram(spec, n_bins)
         res.extend(mspec)
     res = np.array(res)
-    np.savetxt("/sd/spectrogram1.txt", res)
+    # np.savetxt("/sd/spectrogram1.txt", res)
     res_min = np.min(res)
     res_max = np.max(res)
     res = (res - res_min) / (res_max - res_min)
@@ -97,7 +97,7 @@ a0 = ADC(Pin(26))
 data = read_audio_data(a0)
 spectrogram = convert_spectrogram(data)
 
-np.savetxt("/sd/res1.txt", spectrogram)
+# np.savetxt("/sd/res1.txt", spectrogram)
     
     
 
