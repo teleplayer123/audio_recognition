@@ -95,6 +95,7 @@ def pulse(p, data):
 a0 = ADC(Pin(26))
 
 data = read_audio_data(a0)
+spectrogram = convert_spectrogram(data)
 
 # np.savetxt("/sd/audio1.txt", data)
     
