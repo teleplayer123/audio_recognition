@@ -21,7 +21,7 @@ uos.mount(vfs, "/sd")
         
 def read_audio_data(a):
     data = []
-    n_samples = 4096
+    n_samples = 2048
     n_step = 16
     for i in range(0, n_samples * n_step, n_step):
         data.append(100*((a.read_u16() * 3.3 / 65536) - 1.65))
