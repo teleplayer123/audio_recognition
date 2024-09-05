@@ -2,6 +2,7 @@ from machine import Pin, PWM, ADC, SPI
 import math
 import time
 from ulab import numpy as np
+import ulab
 import sdcard
 import uos
 
