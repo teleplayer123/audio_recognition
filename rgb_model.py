@@ -91,12 +91,12 @@ x, y = audio_data, labels
 # new_shape = x.shape[1]*x.shape[2]
 # x = np.reshape(x, (3, new_shape))
 # y = np.ravel(y)
-model = SGDClassifier()
+model = LinearSVC()
 model.fit(x, y)
 score = model.score(x, y)
 print(score)
 
 code = m2cgen.export_to_python(model)
 
-with open("svm_clf.py", "w") as fh:
+with open("svm.py", "w") as fh:
     fh.write(code)
