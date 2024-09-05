@@ -6,6 +6,7 @@ import ulab
 import sdcard
 import uos
 import gc
+from svm import score
 
 
 CS = Pin(13, Pin.OUT)
@@ -20,10 +21,10 @@ uos.mount(vfs, "/sd")
         
 def read_audio_data(a):
     data = []
-    n_samples = 2048
+    n_samples = 4096
     n_step = 16
     for i in range(0, n_samples * n_step, n_step):
-        data.append(100*((a.read_u16() * 3.3 / 65536)) - 1.65)
+        data.append(100*((a.read_u16() * 3.3 / 65536) - 1.65))
     if len(data) % 2 != 0:
         data = data[1:]
     return np.array(data)
@@ -96,8 +97,6 @@ a0 = ADC(Pin(26))
 
 data = read_audio_data(a0)
 spectrogram = convert_spectrogram(data)
-
+res = score(spectrogram)
+print("Score: {}".format(res))
 # np.savetxt("/sd/res1.txt", spectrogram)
-    
-    
-
