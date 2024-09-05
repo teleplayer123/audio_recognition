@@ -6,6 +6,7 @@ import audiobusio
 import neopixel
 from ulab import numpy as np
 import ulab
+import gc
 
 
 # Helper functions to remove DC bias and compute RMS
@@ -17,15 +18,11 @@ def normalized_rms(values):
     samples_sum = sum(float(sample - minbuf) * (sample - minbuf) for sample in values)
     return math.sqrt(samples_sum / len(values))
 
-def read_audio_data(a):
-    data = []
-    n_samples = 8000
-    n_step = 1024
-    for i in range(0, n_samples * 2, n_step):
-        data.append(100*((a.read_u16() * 3.3 / 65536) - 1.65))
-    if len(data) % 2 != 0:
-        data = data[1:]
-    return np.array(data)
+def read_audio_data(mic):
+    n_samples = 1024
+    data = array.array("H", [0] * n_samples)
+    mic.record(data, n_samples)
+    return data
 
 def get_spectrogram(data):
     spect = ulab.utils.spectrogram(data)
@@ -50,11 +47,7 @@ def convert_spectrogram(data):
         spec = get_spectrogram(chunk[:len(chunk)//2])
         mspec = avg_spectrogram(spec, n_bins)
         res.extend(mspec)
-    res = np.array(res)
-    # np.savetxt("/sd/spectrogram1.txt", res)
-    res_min = np.min(res)
-    res_max = np.max(res)
-    res = (res - res_min) / (res_max - res_min)
+    res = normalized_rms(np.array(res))
     return res
 
 def set_color(led, color):
@@ -71,12 +64,13 @@ def set_color(led, color):
 led = neopixel.NeoPixel(board.NEOPIXEL, 1)
 led.brightness = 0.3
 
-# Set up the microphone
-mic = audiobusio.PDMIn(board.TX, board.D12, sample_rate=8000, bit_depth=16)
-samples = array.array('H', [0] * 160)
-
+#setup mic
+mic = audiobusio.PDMIn(board.TX, board.D12, sample_rate=16000, bit_depth=16)
+i = 0
 while True:
-    mic.record(samples, len(samples))
-    magnitude = normalized_rms(samples)
-    print((magnitude,))
-    time.sleep(0.1)
+    data = read_audio_data(mic)
+    print(i)
+    if sum(data) > 1:
+        break
+    i+=1
+print(data)
