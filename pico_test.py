@@ -25,10 +25,11 @@ def convert_spectrogram(data):
         return res
     
     n_bins = 32
-    n_chunks = len(data) // n_bins
-    res = []
     fft_size = 1024
-    for i in range(0, len(data), fft_size):
+    n_chunks = len(data) // fft_size
+    res = []
+    
+    for i in range(0, len(data), n_chunks):
         spect = ulab.utils.spectrogram(data[i*fft_size:i*fft_size+fft_size])
         mres = avg_spectrogram(spect, n_bins)
         res.extend(mres)
@@ -72,6 +73,7 @@ a0 = ADC(Pin(26))
 
 data = read_audio_data(a0)
 spectrogram = convert_spectrogram(data)
+print(len(spectrogram))
 res = svm_red.score(spectrogram)
 print("Red Score: {}".format(res))
 
