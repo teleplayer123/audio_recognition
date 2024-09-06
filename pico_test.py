@@ -17,14 +17,25 @@ def read_audio_data(a):
         data[i] = 100*((a.read_u16() * 3.3 / 65536) - 1.65)
     return data
 
-def convert_spectrogram(data):    
+def downsample_waveform(waveform, n_bins):
+    waveforms = np.zeros(n_bins)
+    waveform = np.array(waveform)
+    n_points = len(waveform) // n_bins
+    for i in range(n_bins):
+        start = i * n_points
+        end = start + n_points
+        waveforms[i] = waveform[start:end].mean()
+    return waveforms
 
+def convert_spectrogram(data):    
     fft_size = 64
+    n_bins = 32
     res = []
-    
     for i in range(0, len(data), fft_size):
         spect = ulab.utils.spectrogram(data[i*fft_size:i*fft_size+fft_size])
-        res.extend(spect)
+        mres = downsample_waveform(spect, n_bins)
+        res.extend(mres)
+    print(len(res))
     res = np.array(res)
     return res
         
