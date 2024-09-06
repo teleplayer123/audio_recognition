@@ -4,18 +4,16 @@ import time
 from ulab import numpy as np
 import ulab
 import gc
-import svm_red
-import svm_green
-import svm_blue
+from svm import score
 
 
 
+        
 def read_audio_data(a):
-    n_samples = 8192
-    data = []
-    for i in range(n_samples*14):
-        if i % 14 == 0:
-        data.append(100*((a.read_u16() * 3.3 / 65536) - 1.65))
+    n_samples = 512 * 18
+    data = np.zeros(n_samples)
+    for i in range(n_samples):
+        data[i] = 100*((a.read_u16() * 3.3 / 65536) - 1.65)
     return data
 
 def convert_spectrogram(data):
@@ -25,10 +23,10 @@ def convert_spectrogram(data):
         res = [np.mean(data[i*n_bins:(i+1)*n_bins]) for i in range(n_chunks)]
         return res
     
-    n_bins = 32
+    n_bins = 18
     n_chunks = len(data) // n_bins
     res = []
-    fft_size = 1024
+    fft_size = 512
     for i in range(0, len(data), fft_size):
         spect = ulab.utils.spectrogram(data[i*fft_size:i*fft_size+fft_size])
         mres = avg_spectrogram(spect, n_bins)
@@ -73,7 +71,7 @@ a0 = ADC(Pin(26))
 
 data = read_audio_data(a0)
 spectrogram = convert_spectrogram(data)
-res = svm_red.score(spectrogram)
-print("Red Score: {}".format(res))
+res = score(spectrogram)
+print("Score: {}".format(res))
 
 
