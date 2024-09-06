@@ -35,7 +35,6 @@ def convert_spectrogram(data):
         spect = ulab.utils.spectrogram(data[i*fft_size:i*fft_size+fft_size])
         mres = downsample_waveform(spect, n_bins)
         res.extend(mres)
-    print(len(res))
     res = np.array(res)
     return res
         
