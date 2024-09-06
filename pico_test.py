@@ -3,21 +3,11 @@ import math
 import time
 from ulab import numpy as np
 import ulab
-import sdcard
-import uos
 import gc
 from svm import score
 
 
-CS = Pin(13, Pin.OUT)
-SCK = Pin(10)
-MISO = Pin(12)
-MOSI = Pin(11)
 
-spi = SPI(1, baudrate=1000000, polarity=0, phase=0, bits=8, firstbit=SPI.MSB, sck=SCK, mosi=MOSI, miso=MISO)
-sd = sdcard.SDCard(spi, CS)
-vfs = uos.VfsFat(sd)
-uos.mount(vfs, "/sd")
         
 def read_audio_data(a):
     data = []
@@ -53,14 +43,12 @@ def convert_spectrogram(data):
         mspec = avg_spectrogram(spec, n_bins)
         res.extend(mspec)
     res = np.array(res)
-    # np.savetxt("/sd/spectrogram1.txt", res)
     res_min = np.min(res)
     res_max = np.max(res)
     res = (res - res_min) / (res_max - res_min)
     return res
         
     
-
 def set_color(color):
     blue = PWM(Pin(0), freq=1000)
     green = PWM(Pin(1), freq=1000)
@@ -89,9 +77,6 @@ def pulse(p, data):
         p.duty_u16(int(math.sin(i / 10 * math.pi) * 5000 + 5000))
         time.sleep_ms(50)
 
-# p0 = PWM(Pin(0), freq=1000)
-# p1 = PWM(Pin(1), freq=1000)
-# p2 = PWM(Pin(2), freq=1000)
 
 a0 = ADC(Pin(26))
 
@@ -99,4 +84,4 @@ data = read_audio_data(a0)
 spectrogram = convert_spectrogram(data)
 res = score(spectrogram)
 print("Score: {}".format(res))
-# np.savetxt("/sd/res1.txt", spectrogram)
+
