@@ -17,26 +17,15 @@ def read_audio_data(a):
         data[i] = 100*((a.read_u16() * 3.3 / 65536) - 1.65)
     return data
 
-def convert_spectrogram(data):
-    
-    def avg_spectrogram(data, n_bins):
-        n_chunks = len(data) // n_bins
-        res = [np.mean(data[i*n_bins:(i+1)*n_bins]) for i in range(n_chunks)]
-        return res
-    
-    n_bins = 32
-    fft_size = 1024
-    n_chunks = len(data) // fft_size
+def convert_spectrogram(data):    
+
+    fft_size = 64
     res = []
     
-    for i in range(0, len(data), n_chunks):
+    for i in range(0, len(data), fft_size):
         spect = ulab.utils.spectrogram(data[i*fft_size:i*fft_size+fft_size])
-        mres = avg_spectrogram(spect, n_bins)
-        res.extend(mres)
+        res.extend(spect)
     res = np.array(res)
-    res_min = np.min(res)
-    res_max = np.max(res)
-    res = (res - res_min) / (res_max - res_min)
     return res
         
     
