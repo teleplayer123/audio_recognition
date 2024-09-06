@@ -34,9 +34,9 @@ def add_white_noise(audio):
     audio_with_noise = tf.clip_by_value(audio_with_noise, clip_value_min=-1, clip_value_max=1)
     return audio_with_noise
 
-def extract_features(audio_file_path, window_size=2281, num_bins=18):
+def extract_features(audio_file_path, window_size=1024, num_bins=16, target_sample_rate=8192):
     sample_rate, audio_data = wavfile.read(audio_file_path)
-    resampled_audio = sps.resample(audio_data, sample_rate)
+    resampled_audio = sps.resample(audio_data, target_sample_rate)
     # Add white noise to the audio
     augmented_audio = add_white_noise(resampled_audio)
     step_size = window_size
@@ -56,20 +56,38 @@ def extract_features(audio_file_path, window_size=2281, num_bins=18):
     return np.array(fft_results)
 
 def load_data(data_dir):
-    waveforms = []
     labels = []
-    for dirname in os.listdir(data_dir):
-        label_dir = os.path.join(data_dir, dirname)
-        if not dirname in labels:
-            labels.append(dirname)
-        wav_files = [os.path.join(label_dir, fname) for fname in os.listdir(label_dir)[:4]]
-        feature_arr = []
-        for wav_file in wav_files:
-            xfeatures = extract_features(wav_file)
-            feature_arr.extend(xfeatures)
-        waveforms.append(np.array(feature_arr))
-        del feature_arr
-    return np.array(waveforms), np.array(labels)
+    feature_arr = []
+    red_dir = os.path.join(data_dir, "red")
+    green_dir = os.path.join(data_dir, "green")
+    blue_dir = os.path.join(data_dir, "blue")
+    red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)[:10]]
+    for wav_file in red_files:
+        xfeatures = extract_features(wav_file)
+        feature_arr.append(xfeatures)
+        labels.append(0)
+    green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)[:10]]
+    for wav_file in green_files:
+        xfeatures = extract_features(wav_file)
+        feature_arr.append(xfeatures)
+        labels.append(1)
+    blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)[:10]]
+    for wav_file in blue_files:
+        xfeatures = extract_features(wav_file)
+        feature_arr.append(xfeatures)
+        labels.append(0)
+    return np.array(feature_arr), np.array(labels)
+
+# def load_data(data_dir):
+#     waveforms = []
+#     labels = ["red", ]
+#     wav_files = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir)[:4]]
+#     feature_arr = []
+#     for wav_file in wav_files:
+#         xfeatures = extract_features(wav_file)
+#         feature_arr.extend(xfeatures)
+#     waveforms.append(np.array(feature_arr))
+#     return np.array(waveforms), np.array(labels)
 
 
 audio_data, labels = load_data(data_dir)
@@ -91,12 +109,12 @@ x, y = audio_data, labels
 # new_shape = x.shape[1]*x.shape[2]
 # x = np.reshape(x, (3, new_shape))
 # y = np.ravel(y)
-model = LinearSVC()
+model = SGDClassifier()
 model.fit(x, y)
 score = model.score(x, y)
 print(score)
 
 code = m2cgen.export_to_python(model)
 
-with open("svm.py", "w") as fh:
+with open("svm_green.py", "w") as fh:
     fh.write(code)
