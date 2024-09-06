@@ -15,7 +15,7 @@ def read_audio_data(a):
     data = []
     for i in range(n_samples*14):
         if i % 14 == 0:
-        data.append(100*((a.read_u16() * 3.3 / 65536) - 1.65))
+            data.append(100*((a.read_u16() * 3.3 / 65536) - 1.65))
     return data
 
 def convert_spectrogram(data):
