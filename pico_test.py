@@ -12,10 +12,9 @@ import svm_blue
 
 def read_audio_data(a):
     n_samples = 8192
-    data = []
-    for i in range(n_samples*14):
-        if i % 14 == 0:
-            data.append(100*((a.read_u16() * 3.3 / 65536) - 1.65))
+    data = np.zeros(n_samples)
+    for i in range(n_samples):
+        data[i] = 100*((a.read_u16() * 3.3 / 65536) - 1.65)
     return data
 
 def convert_spectrogram(data):
