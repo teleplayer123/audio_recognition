@@ -34,13 +34,13 @@ def add_white_noise(audio):
     audio_with_noise = tf.clip_by_value(audio_with_noise, clip_value_min=-1, clip_value_max=1)
     return audio_with_noise
 
-def extract_features(audio_file_path, window_size=1024, overlap=0, num_bins=16):
+def extract_features(audio_file_path, window_size=2281, num_bins=18):
     sample_rate, audio_data = wavfile.read(audio_file_path)
     resampled_audio = sps.resample(audio_data, sample_rate)
     # Add white noise to the audio
     augmented_audio = add_white_noise(resampled_audio)
-    step_size = window_size - overlap
-    num_windows = (len(augmented_audio) - window_size) // step_size + 1
+    step_size = window_size
+    num_windows = len(augmented_audio) // step_size
     fft_results = []
     for i in range(num_windows):
         start_index = i * step_size
@@ -48,7 +48,7 @@ def extract_features(audio_file_path, window_size=1024, overlap=0, num_bins=16):
         windowed_signal = augmented_audio[start_index:end_index]
         
         fft_result = np.fft.fft(windowed_signal)
-        fft_result = fft_result[0:int(fft_result.shape[0] / 2)]
+        fft_result = fft_result[0:int(fft_result.shape[0] // 2)]
         fft_magnitude = np.abs(fft_result)
         fft_magnitude[0] = 0
         fft_magnitude = downsample_waveform(fft_magnitude, num_bins)
