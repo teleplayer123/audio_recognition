@@ -10,38 +10,27 @@ from svm import score
 
         
 def read_audio_data(a):
-    data = []
-    n_samples = 8000
-    n_step = 1024
-    for i in range(0, n_samples * 2, n_step):
-        data.append(100*((a.read_u16() * 3.3 / 65536) - 1.65))
-    if len(data) % 2 != 0:
-        data = data[1:]
-    return np.array(data)
-
-def get_spectrogram(data):
-    spect = ulab.utils.spectrogram(data)
-    spect[0] = 0
-    return spect
-
-def avg_spectrogram(data, n_bins):
-    n_chunks = len(data) // n_bins
-    res = [np.mean(data[i*n_bins:(i+1)*n_bins]) for i in range(n_chunks)]
-    return res
+    n_samples = 512 * 18
+    data = np.zeros(n_samples)
+    for i in range(n_samples):
+        data[i] = 100*((a.read_u16() * 3.3 / 65536) - 1.65)
+    return data
 
 def convert_spectrogram(data):
-    n_bins = 16
-    fft_size = 1024
+    
+    def avg_spectrogram(data, n_bins):
+        n_chunks = len(data) // n_bins
+        res = [np.mean(data[i*n_bins:(i+1)*n_bins]) for i in range(n_chunks)]
+        return res
+    
+    n_bins = 18
+    n_chunks = len(data) // n_bins
     res = []
+    fft_size = 512
     for i in range(0, len(data), fft_size):
-        start = i * fft_size
-        end = start + fft_size
-        chunk = data[start:end]
-        if len(chunk) != fft_size:
-            continue
-        spec = get_spectrogram(chunk[:len(chunk)//2])
-        mspec = avg_spectrogram(spec, n_bins)
-        res.extend(mspec)
+        spect = ulab.utils.spectrogram(data[i*fft_size:i*fft_size+fft_size])
+        mres = avg_spectrogram(spect, n_bins)
+        res.extend(mres)
     res = np.array(res)
     res_min = np.min(res)
     res_max = np.max(res)
@@ -84,4 +73,5 @@ data = read_audio_data(a0)
 spectrogram = convert_spectrogram(data)
 res = score(spectrogram)
 print("Score: {}".format(res))
+
 
