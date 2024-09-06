@@ -19,7 +19,7 @@ def normalized_rms(values):
     return math.sqrt(samples_sum / len(values))
 
 def read_audio_data(mic):
-    n_samples = 1024
+    n_samples = 8192
     data = array.array("H", [0] * n_samples)
     mic.record(data, n_samples)
     return data
@@ -35,8 +35,8 @@ def avg_spectrogram(data, n_bins):
     return res
 
 def convert_spectrogram(data):
-    n_bins = 16
-    fft_size = 1024
+    n_bins = 32
+    fft_size = 64
     res = []
     for i in range(0, len(data), fft_size):
         start = i * fft_size
