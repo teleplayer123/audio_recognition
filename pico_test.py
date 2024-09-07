@@ -14,7 +14,7 @@ def read_audio_data(a):
     n_samples = 8192
     data = np.zeros(n_samples*4)
     for i in range(n_samples):
-        data[i] = 100*((a.read_u16() * 3.3 / 65536) - 1.65)
+        data[i] = 200*((a.read_u16() * 3.3 / 65536) - 1.65)
     return data
 
 def downsample_waveform(waveform, n_bins):
@@ -43,6 +43,12 @@ def convert_spectrogram(data):
         del mres
         gc.collect()
     res = np.array(res)
+    max_arg = np.max(res)
+    min_arg = np.min(res)
+    res = (res - min_arg) / (max_arg - min_arg)
+    del max_arg
+    del min_arg
+    gc.collect()
     return res
         
     
