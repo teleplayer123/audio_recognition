@@ -12,29 +12,36 @@ import svm_blue
 
 def read_audio_data(a):
     n_samples = 8192
-    data = np.zeros(n_samples)
+    data = np.zeros(n_samples*2)
     for i in range(n_samples):
         data[i] = 100*((a.read_u16() * 3.3 / 65536) - 1.65)
     return data
 
 def downsample_waveform(waveform, n_bins):
     waveforms = np.zeros(n_bins)
-    waveform = np.array(waveform)
     n_points = len(waveform) // n_bins
     for i in range(n_bins):
         start = i * n_points
         end = start + n_points
-        waveforms[i] = waveform[start:end].mean()
+        waveforms[i] = waveform[start:end]
     return waveforms
 
-def convert_spectrogram(data):    
-    fft_size = 64
-    n_bins = 32
+def convert_spectrogram(data):
+    orig_len = len(data)
+    fft_size = 16
+    n_bins = 8
     res = []
-    for i in range(0, len(data), fft_size):
-        spect = ulab.utils.spectrogram(data[i*fft_size:i*fft_size+fft_size])
+    for i in range(0, orig_len, fft_size):
+        chunk = data[i*fft_size:(i*fft_size)+fft_size]
+        if len(chunk) == 0:
+            continue
+        spect = ulab.utils.spectrogram(chunk)
         mres = downsample_waveform(spect, n_bins)
+        del spect
+        gc.collect()
         res.extend(mres)
+        del mres
+        gc.collect()
     res = np.array(res)
     return res
         
@@ -70,10 +77,19 @@ def pulse(p, data):
 
 a0 = ADC(Pin(26))
 
-data = read_audio_data(a0)
-spectrogram = convert_spectrogram(data)
-print(len(spectrogram))
-res = svm_red.score(spectrogram)
-print("Red Score: {}".format(res))
-
+while True:
+    data = read_audio_data(a0)
+    if sum(data) > 1:
+        print(data)
+        spectrogram = convert_spectrogram(data)
+        print("Spectrogram Length: {}".format(len(spectrogram)))
+        res = svm_red.score(spectrogram)
+        print("Red Score: {}".format(res))
+        res = svm_green.score(spectrogram)
+        print("Green Score: {}".format(res))
+        res = svm_blue.score(spectrogram)
+        print("Blue Score: {}".format(res))
+        del res
+    del data
+    gc.collect()
 
