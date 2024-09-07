@@ -55,47 +55,84 @@ def extract_features(audio_file_path, window_size=1024, num_bins=16, target_samp
         fft_results.extend(fft_magnitude)
     return np.array(fft_results)
 
-def load_data(data_dir):
+# def load_data(data_dir):
+#     labels = []
+#     feature_arr = []
+#     red_dir = os.path.join(data_dir, "red")
+#     green_dir = os.path.join(data_dir, "green")
+#     blue_dir = os.path.join(data_dir, "blue")
+#     red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)[:10]]
+#     for wav_file in red_files:
+#         xfeatures = extract_features(wav_file)
+#         feature_arr.append(xfeatures)
+#         labels.append(1)
+#     green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)[:10]]
+#     for wav_file in green_files:
+#         xfeatures = extract_features(wav_file)
+#         feature_arr.append(xfeatures)
+#         labels.append(0)
+#     blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)[:10]]
+#     for wav_file in blue_files:
+#         xfeatures = extract_features(wav_file)
+#         feature_arr.append(xfeatures)
+#         labels.append(0)
+#     return np.array(feature_arr), np.array(labels)
+
+def load_dataset(data_dir):
+    waveforms = []
+    labels = []
+    for dirname in os.listdir(data_dir):
+        label_dir = os.path.join(data_dir, dirname)
+        if not dirname in labels:
+            labels.append(dirname)
+        wav_files = [os.path.join(label_dir, fname) for fname in os.listdir(label_dir)]
+        feature_arr = []
+        for wav_file in wav_files:
+            xfeatures = extract_features(wav_file)
+            feature_arr.append(xfeatures)
+        waveforms.append(np.array(feature_arr))
+        del feature_arr
+    return np.array(waveforms), np.array(labels)
+
+def load_data(data_dir, color="red"):
     labels = []
     feature_arr = []
+    red = 0
+    green = 0
+    blue = 0
     red_dir = os.path.join(data_dir, "red")
     green_dir = os.path.join(data_dir, "green")
     blue_dir = os.path.join(data_dir, "blue")
+    if color == "red":
+        red = 1
+    elif color == "green":
+        green = 1
+    elif color == "blue":
+        blue = 1
     red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)[:10]]
     for wav_file in red_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
-        labels.append(1)
+        labels.append(red)
     green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)[:10]]
     for wav_file in green_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
-        labels.append(0)
+        labels.append(green)
     blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)[:10]]
     for wav_file in blue_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
-        labels.append(0)
+        labels.append(blue)
     return np.array(feature_arr), np.array(labels)
 
-# def load_data(data_dir):
-#     waveforms = []
-#     labels = ["red", ]
-#     wav_files = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir)[:4]]
-#     feature_arr = []
-#     for wav_file in wav_files:
-#         xfeatures = extract_features(wav_file)
-#         feature_arr.extend(xfeatures)
-#     waveforms.append(np.array(feature_arr))
-#     return np.array(waveforms), np.array(labels)
 
+# audio_data, labels = load_data(data_dir)
 
-audio_data, labels = load_data(data_dir)
+# print(np.shape(audio_data))
+# print(np.shape(labels))
 
-print(np.shape(audio_data))
-print(np.shape(labels))
-
-x, y = audio_data, labels
+# x, y = audio_data, labels
 
 # x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
@@ -109,12 +146,48 @@ x, y = audio_data, labels
 # new_shape = x.shape[1]*x.shape[2]
 # x = np.reshape(x, (3, new_shape))
 # y = np.ravel(y)
-model = SVC(kernel="rbf")
-model.fit(x, y)
-score = model.score(x, y)
-print(score)
+# model = SVC(kernel="rbf")
+# model.fit(x, y)
+# score = model.score(x, y)
+# print(score)
 
-code = m2cgen.export_to_python(model)
+# code = m2cgen.export_to_python(model)
 
-with open("svc_rbf_red.py", "w") as fh:
-    fh.write(code)
+# with open("svc_rbf_red.py", "w") as fh:
+#     fh.write(code)
+
+red_audio_data, red_labels = load_data(data_dir, color="red")
+green_audio_data, green_labels = load_data(data_dir, color="green")
+blue_audio_data, blue_labels = load_data(data_dir, color="blue")
+
+X_train, X_test, y_train, y_test = train_test_split(red_audio_data, red_labels, test_size=0.2, random_state=42)
+
+def normalize(array):
+    min_val = array.min()
+    max_val = array.max()
+    normalized_array = (array - min_val) / (max_val - min_val)
+    return normalized_array
+
+X_norm_train = np.array([normalize(x) for x in X_train])
+print(np.shape(X_norm_train))
+print(np.shape(y_train))
+
+
+model = tf.keras.models.Sequential()
+model.add(tf.keras.layers.Input(shape=(112,), name="input_embedding"))
+model.add(tf.keras.layers.Dense(12, activation="relu"))
+model.add(tf.keras.layers.Dense(8, activation="relu"))
+model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
+
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), loss="binary_crossentropy", metrics=["accuracy"])
+model.fit(X_norm_train, y_train, epochs=40, batch_size=32, validation_split=0.2)
+
+
+weights_and_biases = {}
+for i, layer in enumerate(model.layers):
+    weights, biases = layer.get_weights()
+    weights_and_biases[f'w{i}'] = weights
+    weights_and_biases[f'b{i}'] = biases
+
+# Save the weights and biases to a file
+np.savez('model_weights_biases.npz', **weights_and_biases)
