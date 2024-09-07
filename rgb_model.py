@@ -37,7 +37,6 @@ def add_white_noise(audio):
 def extract_features(audio_file_path, window_size=1024, num_bins=16, target_sample_rate=8192):
     sample_rate, audio_data = wavfile.read(audio_file_path)
     resampled_audio = sps.resample(audio_data, target_sample_rate)
-    # Add white noise to the audio
     augmented_audio = add_white_noise(resampled_audio)
     step_size = window_size
     num_windows = len(augmented_audio) // step_size
@@ -182,12 +181,14 @@ model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), loss="binary_crossentropy", metrics=["accuracy"])
 model.fit(X_norm_train, y_train, epochs=40, batch_size=32, validation_split=0.2)
 
+def save_weights_biases(model):
+    weights_biases = {}
+    for i, layer in enumerate(model.layers):
+        weights, biases = layer.get_weights()
+        weights_biases["w{}".format(i)] = weights
+        weights_biases["b{}".format(i)] = biases
 
-weights_and_biases = {}
-for i, layer in enumerate(model.layers):
-    weights, biases = layer.get_weights()
-    weights_and_biases[f'w{i}'] = weights
-    weights_and_biases[f'b{i}'] = biases
+    saved_path = os.path.join(os.getcwd(), "models", "weights_biases.npz")
+    np.savez(saved_path, **weights_biases)
+    return saved_path
 
-# Save the weights and biases to a file
-np.savez('model_weights_biases.npz', **weights_and_biases)

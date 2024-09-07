@@ -189,6 +189,17 @@ def build_audio_recognition_model(input_shape, train_ds, labels):
 	)
 	return model
 
+def build_model_lite(X, y, epochs=40, batch_size=32):
+	model = tf.keras.models.Sequential()
+	model.add(tf.keras.layers.Input(shape=(112,), name="input_embedding"))
+	model.add(tf.keras.layers.Dense(12, activation="relu"))
+	model.add(tf.keras.layers.Dense(8, activation="relu"))
+	model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
+
+	model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), loss="binary_crossentropy", metrics=["accuracy"])
+	model.fit(X, y, epochs=epochs, batch_size=batch_size, validation_split=0.2)
+	return model
+
 def downsample_waveform(waveform, num_bins):
     waveform = np.array(waveform)
     original_length = len(waveform)
@@ -210,13 +221,12 @@ def add_white_noise(audio):
     audio_with_noise = tf.clip_by_value(audio_with_noise, clip_value_min=-1, clip_value_max=1)
     return audio_with_noise
 
-def extract_features(audio_file_path, window_size=1024, overlap=0, num_bins=16):
+def extract_features(audio_file_path, window_size=1024, num_bins=16, target_sample_rate=8192):
     sample_rate, audio_data = wavfile.read(audio_file_path)
-    resampled_audio = sps.resample(audio_data, sample_rate)
-    # Add white noise to the audio
+    resampled_audio = sps.resample(audio_data, target_sample_rate)
     augmented_audio = add_white_noise(resampled_audio)
-    step_size = window_size - overlap
-    num_windows = (len(augmented_audio) - window_size) // step_size + 1
+    step_size = window_size
+    num_windows = len(augmented_audio) // step_size
     fft_results = []
     for i in range(num_windows):
         start_index = i * step_size
@@ -224,7 +234,7 @@ def extract_features(audio_file_path, window_size=1024, overlap=0, num_bins=16):
         windowed_signal = augmented_audio[start_index:end_index]
         
         fft_result = np.fft.fft(windowed_signal)
-        fft_result = fft_result[0:int(fft_result.shape[0] / 2)]
+        fft_result = fft_result[0:int(fft_result.shape[0] // 2)]
         fft_magnitude = np.abs(fft_result)
         fft_magnitude[0] = 0
         fft_magnitude = downsample_waveform(fft_magnitude, num_bins)

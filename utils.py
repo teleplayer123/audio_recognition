@@ -126,6 +126,17 @@ def save_labels(labels, outfile="labels.txt"):
 		labels = np.array(labels)
 	labels.tofile(save_path, sep="\n")
 
+def save_weights_biases(model):
+    weights_biases = {}
+    for i, layer in enumerate(model.layers):
+        weights, biases = layer.get_weights()
+        weights_biases["w{}".format(i)] = weights
+        weights_biases["b{}".format(i)] = biases
+
+    saved_path = os.path.join(os.getcwd(), "models", "weights_biases.npz")
+    np.savez(saved_path, **weights_biases)
+    return saved_path
+
 
 ############################################
 #          Audio Signal Processing         #
@@ -135,7 +146,7 @@ def get_noise(n):
     noise = (np.random.rand(n) + 1j * np.random.randn(n)) / np.sqrt(2)
     return noise
 
-def spectrogram(audio, fft_size=1024, sr=8000):
+def get_psd(audio, fft_size=1024, sr=8000):
     noise = get_noise(fft_size)
     audio_aug = audio + noise
     spec = np.fft.fftshift(np.fft.fft(audio_aug))
