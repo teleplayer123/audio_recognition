@@ -5,7 +5,7 @@ import scipy.signal as sps
 from scipy.io import wavfile
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.svm import SVR, NuSVR, NuSVC
+from sklearn.svm import SVR, SVC
 from sklearn.linear_model import SGDClassifier
 import m2cgen
 
@@ -109,12 +109,12 @@ x, y = audio_data, labels
 # new_shape = x.shape[1]*x.shape[2]
 # x = np.reshape(x, (3, new_shape))
 # y = np.ravel(y)
-model = NuSVC(kernel="rbf")
+model = SVC(kernel="rbf")
 model.fit(x, y)
 score = model.score(x, y)
 print(score)
 
 code = m2cgen.export_to_python(model)
 
-with open("nusvc_rbf_red.py", "w") as fh:
+with open("svc_rbf_red.py", "w") as fh:
     fh.write(code)
