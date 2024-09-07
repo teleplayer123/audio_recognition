@@ -1,9 +1,9 @@
-import os
+from lib.red_model import score
 import numpy as np
-import tensorflow as tf
-import scipy.signal as sps
-from scipy.io import wavfile
-import matplotlib.pyplot as plt
+import os
+from audio_processing import extract_features
 
-
-data_dir = os.path.join(os.getcwd(), "rgb_wavs", "rgb")
+red0 = os.path.join(os.getcwd(), "rgb_wavs", "rgb", "red", "red0.wav")
+arr = extract_features(red0)
+s = score(arr)
+print("score: {}".format(s))
