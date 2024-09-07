@@ -12,7 +12,7 @@ import svm_blue
 
 def read_audio_data(a):
     n_samples = 8192
-    data = np.zeros(n_samples*2)
+    data = np.zeros(n_samples*4)
     for i in range(n_samples):
         data[i] = 100*((a.read_u16() * 3.3 / 65536) - 1.65)
     return data
@@ -28,8 +28,8 @@ def downsample_waveform(waveform, n_bins):
 
 def convert_spectrogram(data):
     orig_len = len(data)
-    fft_size = 16
-    n_bins = 8
+    fft_size = 64
+    n_bins = 16
     res = []
     for i in range(0, orig_len, fft_size):
         chunk = data[i*fft_size:(i*fft_size)+fft_size]
