@@ -192,3 +192,6 @@ def save_weights_biases(model):
     np.savez(saved_path, **weights_biases)
     return saved_path
 
+def load_weights_biases(path):
+    data = np.load(path)
+    

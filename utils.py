@@ -6,6 +6,7 @@ from scipy.io import wavfile
 import scipy.signal as sps
 import tensorflow as tf
 import numpy as np
+import math
 
 
 #####################################
@@ -152,3 +153,21 @@ def get_psd(audio, fft_size=1024, sr=8000):
     spec = np.fft.fftshift(np.fft.fft(audio_aug))
     mag = 10*np.log10(np.abs(spec)**2)
     return mag
+
+
+############################################
+#               ML Functions               #
+############################################
+
+def sigmoid(t):
+    return 1 / (1 + math.exp(-t))
+
+def shape(t):
+    sizes = []
+    while isinstance(t, list):
+        sizes.append(len(t))
+        t = t[0]
+    return sizes
+
+def relu(t):
+    return np.maximum(0, t)
