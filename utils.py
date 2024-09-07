@@ -6,7 +6,6 @@ from scipy.io import wavfile
 import scipy.signal as sps
 import tensorflow as tf
 import numpy as np
-import math
 
 
 #####################################
@@ -160,7 +159,7 @@ def get_psd(audio, fft_size=1024, sr=8000):
 ############################################
 
 def sigmoid(t):
-    return 1 / (1 + math.exp(-t))
+    return 1 / (1 + np.exp(-t))
 
 def shape(t):
     sizes = []
