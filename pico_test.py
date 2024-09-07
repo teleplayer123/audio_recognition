@@ -23,7 +23,7 @@ def downsample_waveform(waveform, n_bins):
     for i in range(n_bins):
         start = i * n_points
         end = start + n_points
-        waveforms[i] = waveform[start:end]
+        waveforms[i] = np.mean(waveform[start:end])
     return waveforms
 
 def convert_spectrogram(data):
@@ -80,7 +80,6 @@ a0 = ADC(Pin(26))
 while True:
     data = read_audio_data(a0)
     if sum(data) > 1:
-        print(data)
         spectrogram = convert_spectrogram(data)
         print("Spectrogram Length: {}".format(len(spectrogram)))
         res = svm_red.score(spectrogram)
