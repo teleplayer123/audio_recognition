@@ -11,7 +11,7 @@ import svm_blue
 
 
 def read_audio_data(mic):
-    n_samples = 1024 
+    n_samples = 8192
     data = []
     for i in range(n_samples):
         data.append(100*((mic.value * 3.3 / 65536) - 1.65))
@@ -28,8 +28,8 @@ def downsample_waveform(waveform, n_bins):
     return waveforms
 
 def convert_spectrogram(data):
-    n_bins = 32
-    fft_size = 64
+    n_bins = 64
+    fft_size = 1024
     res = []
     for i in range(0, len(data), fft_size):
         spec = ulab.utils.spectrogram(data[i:i+fft_size])
@@ -68,7 +68,7 @@ mic = analogio.AnalogIn(board.A2)
 
 while True:
     data = read_audio_data(mic)
-    if len(data) > 1:
+    if len(data) >= 8000:
         spec = convert_spectrogram(data)
         print(len(spec))
         score = svm_red.score(spec)
