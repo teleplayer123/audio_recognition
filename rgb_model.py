@@ -5,7 +5,7 @@ import scipy.signal as sps
 from scipy.io import wavfile
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.svm import LinearSVC
+from sklearn.svm import SVR, NuSVR, NuSVC
 from sklearn.linear_model import SGDClassifier
 import m2cgen
 
@@ -65,12 +65,12 @@ def load_data(data_dir):
     for wav_file in red_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
-        labels.append(0)
+        labels.append(1)
     green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)[:10]]
     for wav_file in green_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
-        labels.append(1)
+        labels.append(0)
     blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)[:10]]
     for wav_file in blue_files:
         xfeatures = extract_features(wav_file)
@@ -109,12 +109,12 @@ x, y = audio_data, labels
 # new_shape = x.shape[1]*x.shape[2]
 # x = np.reshape(x, (3, new_shape))
 # y = np.ravel(y)
-model = SGDClassifier()
+model = NuSVC(kernel="rbf")
 model.fit(x, y)
 score = model.score(x, y)
 print(score)
 
 code = m2cgen.export_to_python(model)
 
-with open("svm_green.py", "w") as fh:
+with open("nusvc_rbf_red.py", "w") as fh:
     fh.write(code)
