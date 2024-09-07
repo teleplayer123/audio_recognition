@@ -12,9 +12,9 @@ import svm_blue
 
 def read_audio_data(a):
     n_samples = 8192
-    data = np.zeros(n_samples*4)
+    data = np.zeros(n_samples*2)
     for i in range(n_samples):
-        data[i] = 200*((a.read_u16() * 3.3 / 65536) - 1.65)
+        data[i] = 100*((a.read_u16() * 3.3 / 65536) - 1.65)
     return data
 
 def downsample_waveform(waveform, n_bins):
@@ -28,14 +28,13 @@ def downsample_waveform(waveform, n_bins):
 
 def convert_spectrogram(data):
     orig_len = len(data)
-    fft_size = 64
+    fft_size = 1024
     n_bins = 16
     res = []
     for i in range(0, orig_len, fft_size):
-        chunk = data[i*fft_size:(i*fft_size)+fft_size]
-        if len(chunk) == 0:
-            continue
+        chunk = data[i:i+fft_size]
         spect = ulab.utils.spectrogram(chunk)
+        spect[0] = 0
         mres = downsample_waveform(spect, n_bins)
         del spect
         gc.collect()
@@ -43,13 +42,13 @@ def convert_spectrogram(data):
         del mres
         gc.collect()
     res = np.array(res)
-    max_arg = np.max(res)
-    min_arg = np.min(res)
+    max_arg = np.argmax(res)
+    min_arg = np.argmin(res)
     res = (res - min_arg) / (max_arg - min_arg)
     del max_arg
     del min_arg
     gc.collect()
-    return res
+    return res 
         
     
 def set_color(color):
