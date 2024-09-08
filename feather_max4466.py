@@ -27,7 +27,7 @@ def downsample_waveform(waveform, n_bins):
     return waveforms
 
 def convert_spectrogram(data):
-    n_bins = 64
+    n_bins = 16
     fft_size = 1024
     res = []
     for i in range(0, len(data), fft_size):
@@ -67,9 +67,10 @@ mic = analogio.AnalogIn(board.A2)
 
 while True:
     data = read_audio_data(mic)
-    if len(data) >= 8000:
+    if len(data) >= 8192:
+        print("data len: {}".format(len(data)))
         spec = convert_spectrogram(data)
-        print(len(spec))
+        print("spectrogram len: {}".format(len(spec)))
         score = red_model.score(spec)
         print("Red Score: {}".format(score))
         score = green_model.score(spec)
@@ -81,5 +82,6 @@ while True:
         del spec
         gc.collect()
         time.sleep(1)
+
 
 
