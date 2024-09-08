@@ -2,7 +2,7 @@ import time
 import board
 import analogio
 import neopixel
-from ulab import numpy as np
+import ulab.numpy as np
 import ulab
 import gc
 import svm_red
