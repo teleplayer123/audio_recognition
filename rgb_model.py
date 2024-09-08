@@ -194,4 +194,30 @@ def save_weights_biases(model):
 
 def load_weights_biases(path):
     data = np.load(path)
-    
+    data_dict = {k: v for k, v in data.items()}
+    return data_dict
+
+def predict_template(path, model_name="red_model"):
+    data = load_weights_biases(path)
+    template = \
+f"""import ulab.numpy as np
+
+def relu(t):
+    return np.maximum(0, t)
+
+def sigmoid(t):
+    return 1 / (1 + np.exp(-t))
+
+def score(t):
+    z0 = np.dot(t, np.array({data["w0"].tolist()})) + np.array({data["b0"].tolist()})
+    a0 = relu(z0)
+    z1 = np.dot(a0, np.array({data["w1"].tolist()})) + np.array({data["b1"].tolist()})
+    a1 = relu(z1)
+    z2 = np.dot(a1, np.array({data["w2"].tolist()})) + np.array({data["b2"].tolist()})
+    res = sigmoid(z2)
+    return res 
+"""
+    outfile = os.path.join(os.getcwd(), "lib", "{}.py".format(model_name))
+    with open(outfile, "w") as fh:
+        fh.write(template)
+    return outfile
