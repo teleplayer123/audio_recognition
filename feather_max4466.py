@@ -17,7 +17,6 @@ def read_audio_data(mic):
         data.append(100*((mic.value * 3.3 / 65536) - 1.65))
     return np.array(data)
 
-
 def downsample_waveform(waveform, n_bins):
     waveforms = np.zeros(n_bins)
     n_points = len(waveform) // n_bins
