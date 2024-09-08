@@ -5,9 +5,9 @@ import neopixel
 import ulab.numpy as np
 import ulab
 import gc
-import svm_red
-import svm_green
-import svm_blue
+import red_model
+import green_model
+import blue_model
 
 
 def read_audio_data(mic):
@@ -70,11 +70,11 @@ while True:
     if len(data) >= 8000:
         spec = convert_spectrogram(data)
         print(len(spec))
-        score = svm_red.score(spec)
+        score = red_model.score(spec)
         print("Red Score: {}".format(score))
-        score = svm_green.score(spec)
+        score = green_model.score(spec)
         print("Green Score: {}".format(score))
-        score = svm_blue.score(spec)
+        score = blue_model.score(spec)
         print("Blue Score: {}".format(score))
         del score
         del data
