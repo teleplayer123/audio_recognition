@@ -75,11 +75,11 @@ while True:
         print("data len: {}".format(len(data)))
         spec = convert_spectrogram(data)
         print("spectrogram len: {}".format(len(spec)))
-        rscore = red_model.score(spec)
+        rscore = red_model.score(spec)[0]
         print("Red Score: {}".format(rscore))
-        gscore = green_model.score(spec)
+        gscore = green_model.score(spec)[0]
         print("Green Score: {}".format(gscore))
-        bscore = blue_model.score(spec)
+        bscore = blue_model.score(spec)[0]
         print("Blue Score: {}".format(bscore))
         c = get_color(rscore, gscore, bscore)
         set_color(led, c)
