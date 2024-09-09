@@ -57,6 +57,10 @@ def set_color(led, color):
         led[0] = (0, 0, 255)
     else:
         led[0] = (0, 0, 0)
+        
+def get_color(r, g, b):
+    color_dict = {r: "red", g: "green", b: "blue"}
+    return color_dict[max(color_dict.keys())]
 
 #setup led
 led = neopixel.NeoPixel(board.NEOPIXEL, 1)
@@ -71,17 +75,19 @@ while True:
         print("data len: {}".format(len(data)))
         spec = convert_spectrogram(data)
         print("spectrogram len: {}".format(len(spec)))
-        score = red_model.score(spec)
-        print("Red Score: {}".format(score))
-        score = green_model.score(spec)
-        print("Green Score: {}".format(score))
-        score = blue_model.score(spec)
-        print("Blue Score: {}".format(score))
-        del score
+        rscore = red_model.score(spec)
+        print("Red Score: {}".format(rscore))
+        gscore = green_model.score(spec)
+        print("Green Score: {}".format(gscore))
+        bscore = blue_model.score(spec)
+        print("Blue Score: {}".format(bscore))
+        c = get_color(rscore, gscore, bscore)
+        set_color(led, c)
         del data
         del spec
         gc.collect()
-        time.sleep(1)
+        time.sleep(5)
+        print("speak...")
 
 
 
