@@ -3,22 +3,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import tensorflow as tf
-import tensorflow_io as tfio
 import scipy.signal as sps
 from scipy.io import wavfile
+# import tensorflow_io as tfio
 
 
-@tf.function
-def load_wav_16k_mono(filename):
-	""" Load a WAV file, convert it to a float tensor, resample to 16 kHz single-channel audio. """
-	file_contents = tf.io.read_file(filename)
-	wav, sample_rate = tf.audio.decode_wav(
-			file_contents,
-			desired_channels=1)
-	wav = tf.squeeze(wav, axis=-1)
-	sample_rate = tf.cast(sample_rate, dtype=tf.int64)
-	wav = tfio.audio.resample(wav, rate_in=sample_rate, rate_out=16000)
-	return wav
+
+# @tf.function
+# def load_wav_16k_mono(filename):
+# 	""" Load a WAV file, convert it to a float tensor, resample to 16 kHz single-channel audio. """
+# 	file_contents = tf.io.read_file(filename)
+# 	wav, sample_rate = tf.audio.decode_wav(
+# 			file_contents,
+# 			desired_channels=1)
+# 	wav = tf.squeeze(wav, axis=-1)
+# 	sample_rate = tf.cast(sample_rate, dtype=tf.int64)
+# 	wav = tfio.audio.resample(wav, rate_in=sample_rate, rate_out=16000)
+# 	return wav
 
 def take_first(ds):
 	vals = [(audio, labels) for audio, labels in ds.take(1)][0]  
@@ -189,6 +190,17 @@ def build_audio_recognition_model(input_shape, train_ds, labels):
 	)
 	return model
 
+def build_model_lite(X, y, epochs=40, batch_size=32):
+	model = tf.keras.models.Sequential()
+	model.add(tf.keras.layers.Input(shape=(112,), name="input_embedding"))
+	model.add(tf.keras.layers.Dense(12, activation="relu"))
+	model.add(tf.keras.layers.Dense(8, activation="relu"))
+	model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
+
+	model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), loss="binary_crossentropy", metrics=["accuracy"])
+	model.fit(X, y, epochs=epochs, batch_size=batch_size, validation_split=0.2)
+	return model
+
 def downsample_waveform(waveform, num_bins):
     waveform = np.array(waveform)
     original_length = len(waveform)
@@ -210,26 +222,27 @@ def add_white_noise(audio):
     audio_with_noise = tf.clip_by_value(audio_with_noise, clip_value_min=-1, clip_value_max=1)
     return audio_with_noise
 
-def extract_features(audio_file_path, window_size=1024, overlap=0, num_bins=16):
-    sample_rate, audio_data = wavfile.read(audio_file_path)
-    resampled_audio = sps.resample(audio_data, sample_rate)
-    # Add white noise to the audio
-    augmented_audio = add_white_noise(resampled_audio)
-    step_size = window_size - overlap
-    num_windows = (len(augmented_audio) - window_size) // step_size + 1
-    fft_results = []
-    for i in range(num_windows):
-        start_index = i * step_size
-        end_index = start_index + window_size
-        windowed_signal = augmented_audio[start_index:end_index]
-        
-        fft_result = np.fft.fft(windowed_signal)
-        fft_result = fft_result[0:int(fft_result.shape[0] / 2)]
-        fft_magnitude = np.abs(fft_result)
-        fft_magnitude[0] = 0
-        fft_magnitude = downsample_waveform(fft_magnitude, num_bins)
-        fft_results.extend(fft_magnitude)
-    return np.array(fft_results)
+def extract_features(audio_file_path, window_size=1024, num_bins=16, target_sample_rate=None):
+	sample_rate, audio_data = wavfile.read(audio_file_path)
+	if target_sample_rate != None:
+		sample_rate = target_sample_rate
+	resampled_audio = sps.resample(audio_data, sample_rate)
+	augmented_audio = add_white_noise(resampled_audio)
+	step_size = window_size
+	num_windows = len(augmented_audio) // step_size
+	fft_results = []
+	for i in range(num_windows):
+		start_index = i * step_size
+		end_index = start_index + window_size
+		windowed_signal = augmented_audio[start_index:end_index]
+		
+		fft_result = np.fft.fft(windowed_signal)
+		fft_result = fft_result[0:int(fft_result.shape[0] // 2)]
+		fft_magnitude = np.abs(fft_result)
+		fft_magnitude[0] = 0
+		fft_magnitude = downsample_waveform(fft_magnitude, num_bins)
+		fft_results.extend(fft_magnitude)
+	return np.array(fft_results)
 
 def load_data(data_dir):
     waveforms = []
@@ -247,7 +260,7 @@ def load_data(data_dir):
         del feature_arr
     return np.array(waveforms), np.array(labels)
 
-def convert_spectrogram(x):
+def convert_psd_spectrogram(x):
     fft_size = 1024
     num_rows = len(x) // fft_size
     spectrogram = np.zeros((num_rows, fft_size))

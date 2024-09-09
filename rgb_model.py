@@ -5,7 +5,7 @@ import scipy.signal as sps
 from scipy.io import wavfile
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.svm import LinearSVC
+from sklearn.svm import SVR, SVC
 from sklearn.linear_model import SGDClassifier
 import m2cgen
 
@@ -37,7 +37,6 @@ def add_white_noise(audio):
 def extract_features(audio_file_path, window_size=1024, num_bins=16, target_sample_rate=8192):
     sample_rate, audio_data = wavfile.read(audio_file_path)
     resampled_audio = sps.resample(audio_data, target_sample_rate)
-    # Add white noise to the audio
     augmented_audio = add_white_noise(resampled_audio)
     step_size = window_size
     num_windows = len(augmented_audio) // step_size
@@ -55,47 +54,84 @@ def extract_features(audio_file_path, window_size=1024, num_bins=16, target_samp
         fft_results.extend(fft_magnitude)
     return np.array(fft_results)
 
-def load_data(data_dir):
+# def load_data(data_dir):
+#     labels = []
+#     feature_arr = []
+#     red_dir = os.path.join(data_dir, "red")
+#     green_dir = os.path.join(data_dir, "green")
+#     blue_dir = os.path.join(data_dir, "blue")
+#     red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)[:10]]
+#     for wav_file in red_files:
+#         xfeatures = extract_features(wav_file)
+#         feature_arr.append(xfeatures)
+#         labels.append(1)
+#     green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)[:10]]
+#     for wav_file in green_files:
+#         xfeatures = extract_features(wav_file)
+#         feature_arr.append(xfeatures)
+#         labels.append(0)
+#     blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)[:10]]
+#     for wav_file in blue_files:
+#         xfeatures = extract_features(wav_file)
+#         feature_arr.append(xfeatures)
+#         labels.append(0)
+#     return np.array(feature_arr), np.array(labels)
+
+def load_dataset(data_dir):
+    waveforms = []
+    labels = []
+    for dirname in os.listdir(data_dir):
+        label_dir = os.path.join(data_dir, dirname)
+        if not dirname in labels:
+            labels.append(dirname)
+        wav_files = [os.path.join(label_dir, fname) for fname in os.listdir(label_dir)]
+        feature_arr = []
+        for wav_file in wav_files:
+            xfeatures = extract_features(wav_file)
+            feature_arr.append(xfeatures)
+        waveforms.append(np.array(feature_arr))
+        del feature_arr
+    return np.array(waveforms), np.array(labels)
+
+def load_data(data_dir, color="red"):
     labels = []
     feature_arr = []
+    red = 0
+    green = 0
+    blue = 0
     red_dir = os.path.join(data_dir, "red")
     green_dir = os.path.join(data_dir, "green")
     blue_dir = os.path.join(data_dir, "blue")
+    if color == "red":
+        red = 1
+    elif color == "green":
+        green = 1
+    elif color == "blue":
+        blue = 1
     red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)[:10]]
     for wav_file in red_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
-        labels.append(0)
+        labels.append(red)
     green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)[:10]]
     for wav_file in green_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
-        labels.append(1)
+        labels.append(green)
     blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)[:10]]
     for wav_file in blue_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
-        labels.append(0)
+        labels.append(blue)
     return np.array(feature_arr), np.array(labels)
 
-# def load_data(data_dir):
-#     waveforms = []
-#     labels = ["red", ]
-#     wav_files = [os.path.join(data_dir, fname) for fname in os.listdir(data_dir)[:4]]
-#     feature_arr = []
-#     for wav_file in wav_files:
-#         xfeatures = extract_features(wav_file)
-#         feature_arr.extend(xfeatures)
-#     waveforms.append(np.array(feature_arr))
-#     return np.array(waveforms), np.array(labels)
 
+# audio_data, labels = load_data(data_dir)
 
-audio_data, labels = load_data(data_dir)
+# print(np.shape(audio_data))
+# print(np.shape(labels))
 
-print(np.shape(audio_data))
-print(np.shape(labels))
-
-x, y = audio_data, labels
+# x, y = audio_data, labels
 
 # x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
@@ -109,12 +145,79 @@ x, y = audio_data, labels
 # new_shape = x.shape[1]*x.shape[2]
 # x = np.reshape(x, (3, new_shape))
 # y = np.ravel(y)
-model = SGDClassifier()
-model.fit(x, y)
-score = model.score(x, y)
-print(score)
+# model = SVC(kernel="rbf")
+# model.fit(x, y)
+# score = model.score(x, y)
+# print(score)
 
-code = m2cgen.export_to_python(model)
+# code = m2cgen.export_to_python(model)
 
-with open("svm_green.py", "w") as fh:
-    fh.write(code)
+# with open("svc_rbf_red.py", "w") as fh:
+#     fh.write(code)
+
+red_audio_data, red_labels = load_data(data_dir, color="red")
+green_audio_data, green_labels = load_data(data_dir, color="green")
+blue_audio_data, blue_labels = load_data(data_dir, color="blue")
+
+X_train, X_test, y_train, y_test = train_test_split(red_audio_data, red_labels, test_size=0.2, random_state=42)
+
+def normalize(array):
+    min_val = array.min()
+    max_val = array.max()
+    normalized_array = (array - min_val) / (max_val - min_val)
+    return normalized_array
+
+X_norm_train = np.array([normalize(x) for x in X_train])
+print(np.shape(X_norm_train))
+print(np.shape(y_train))
+
+
+model = tf.keras.models.Sequential()
+model.add(tf.keras.layers.Input(shape=(112,), name="input_embedding"))
+model.add(tf.keras.layers.Dense(12, activation="relu"))
+model.add(tf.keras.layers.Dense(8, activation="relu"))
+model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
+
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), loss="binary_crossentropy", metrics=["accuracy"])
+model.fit(X_norm_train, y_train, epochs=40, batch_size=32, validation_split=0.2)
+
+def save_weights_biases(model):
+    weights_biases = {}
+    for i, layer in enumerate(model.layers):
+        weights, biases = layer.get_weights()
+        weights_biases["w{}".format(i)] = weights
+        weights_biases["b{}".format(i)] = biases
+
+    saved_path = os.path.join(os.getcwd(), "models", "weights_biases.npz")
+    np.savez(saved_path, **weights_biases)
+    return saved_path
+
+def load_weights_biases(path):
+    data = np.load(path)
+    data_dict = {k: v for k, v in data.items()}
+    return data_dict
+
+def predict_template(path, model_name="red_model"):
+    data = load_weights_biases(path)
+    template = \
+f"""import ulab.numpy as np
+
+def relu(t):
+    return np.maximum(0, t)
+
+def sigmoid(t):
+    return 1 / (1 + np.exp(-t))
+
+def score(t):
+    z0 = np.dot(t, np.array({data["w0"].tolist()})) + np.array({data["b0"].tolist()})
+    a0 = relu(z0)
+    z1 = np.dot(a0, np.array({data["w1"].tolist()})) + np.array({data["b1"].tolist()})
+    a1 = relu(z1)
+    z2 = np.dot(a1, np.array({data["w2"].tolist()})) + np.array({data["b2"].tolist()})
+    res = sigmoid(z2)
+    return res 
+"""
+    outfile = os.path.join(os.getcwd(), "lib", "{}.py".format(model_name))
+    with open(outfile, "w") as fh:
+        fh.write(template)
+    return outfile

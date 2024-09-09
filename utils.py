@@ -55,18 +55,7 @@ def load_wav_16k_mono(fname):
     wav = sps.resample(data, n_samples)
     return wav
 
-def add_white_noise(audio):
-    #generate noise and the scalar multiplier
-    noise = tf.random.uniform(shape=tf.shape(audio), minval=-1, maxval=1)
-    noise_scalar = tf.random.uniform(shape=[1], minval=0, maxval=0.2)
-    # add them to the original audio
-    audio_with_noise = audio + (noise * noise_scalar)
-    # final clip the values to ensure they are still between -1 and 1
-    audio_with_noise = tf.clip_by_value(audio_with_noise, clip_value_min=-1, clip_value_max=1)
-    return audio_with_noise
-
-def convert_spectrogram(x):
-    fft_size = 1024
+def convert_psd_spectrogram(x, fft_size=1024):
     num_rows = len(x) // fft_size
     spectrogram = np.zeros((num_rows, fft_size))
     for i in range(num_rows):
@@ -126,6 +115,46 @@ def save_labels(labels, outfile="labels.txt"):
 		labels = np.array(labels)
 	labels.tofile(save_path, sep="\n")
 
+def save_weights_biases(model):
+    weights_biases = {}
+    for i, layer in enumerate(model.layers):
+        weights, biases = layer.get_weights()
+        weights_biases["w{}".format(i)] = weights
+        weights_biases["b{}".format(i)] = biases
+
+    saved_path = os.path.join(os.getcwd(), "models", "weights_biases.npz")
+    np.savez(saved_path, **weights_biases)
+    return saved_path
+
+def load_weights_biases(path):
+    data = np.load(path)
+    data_dict = {k: v for k, v in data.items()}
+    return data_dict
+
+def predict_template(path, model_name="red_model"):
+    data = load_weights_biases(path)
+    template = \
+f"""import ulab.numpy as np
+
+def relu(t):
+    return np.maximum(0, t)
+
+def sigmoid(t):
+    return 1 / (1 + np.exp(-t))
+
+def score(t):
+    z0 = np.dot(t, np.array({data["w0"].tolist()})) + np.array({data["b0"].tolist()})
+    a0 = relu(z0)
+    z1 = np.dot(a0, np.array({data["w1"].tolist()})) + np.array({data["b1"].tolist()})
+    a1 = relu(z1)
+    z2 = np.dot(a1, np.array({data["w2"].tolist()})) + np.array({data["b2"].tolist()})
+    res = sigmoid(z2)
+    return res 
+"""
+    outfile = os.path.join(os.getcwd(), "lib", "{}.py".format(model_name))
+    with open(outfile, "w") as fh:
+        fh.write(template)
+    return outfile
 
 ############################################
 #          Audio Signal Processing         #
@@ -135,9 +164,90 @@ def get_noise(n):
     noise = (np.random.rand(n) + 1j * np.random.randn(n)) / np.sqrt(2)
     return noise
 
-def spectrogram(audio, fft_size=1024, sr=8000):
+def get_psd(audio, fft_size=1024, sr=8000):
     noise = get_noise(fft_size)
     audio_aug = audio + noise
     spec = np.fft.fftshift(np.fft.fft(audio_aug))
     mag = 10*np.log10(np.abs(spec)**2)
     return mag
+
+def downsample_waveform(waveform, num_bins):
+    waveform = np.array(waveform)
+    original_length = len(waveform)
+    points_per_bin = original_length // num_bins
+    downsampled_waveform = np.zeros(num_bins)
+    for i in range(num_bins):
+        start_index = i * points_per_bin
+        end_index = start_index + points_per_bin
+        downsampled_waveform[i] = waveform[start_index:end_index].mean()
+    return downsampled_waveform.tolist()
+
+def add_white_noise(audio):
+    #generate noise and the scalar multiplier
+    noise = tf.random.uniform(shape=tf.shape(audio), minval=-1, maxval=1)
+    noise_scalar = tf.random.uniform(shape=[1], minval=0, maxval=0.2)
+    # add them to the original audio
+    audio_with_noise = audio + (noise * noise_scalar)
+    # final clip the values to ensure they are still between -1 and 1
+    audio_with_noise = tf.clip_by_value(audio_with_noise, clip_value_min=-1, clip_value_max=1)
+    return audio_with_noise
+
+def extract_features(audio_file_path, window_size=1024, num_bins=16, target_sample_rate=None):
+	sample_rate, audio_data = wavfile.read(audio_file_path)
+	if target_sample_rate != None:
+		sample_rate = target_sample_rate
+	resampled_audio = sps.resample(audio_data, sample_rate)
+	augmented_audio = add_white_noise(resampled_audio)
+	step_size = window_size
+	num_windows = len(augmented_audio) // step_size
+	fft_results = []
+	for i in range(num_windows):
+		start_index = i * step_size
+		end_index = start_index + window_size
+		windowed_signal = augmented_audio[start_index:end_index]
+		
+		fft_result = np.fft.fft(windowed_signal)
+		fft_result = fft_result[0:int(fft_result.shape[0] // 2)]
+		fft_magnitude = np.abs(fft_result)
+		fft_magnitude[0] = 0
+		fft_magnitude = downsample_waveform(fft_magnitude, num_bins)
+		fft_results.extend(fft_magnitude)
+	return np.array(fft_results)
+
+############################################
+#               ML Functions               #
+############################################
+
+def sigmoid(t):
+    return 1 / (1 + np.exp(-t))
+
+def shape(t):
+    sizes = []
+    while isinstance(t, list):
+        sizes.append(len(t))
+        t = t[0]
+    return sizes
+
+def relu(t):
+    return np.maximum(0, t)
+
+def normalize(array):
+    min_val = array.min()
+    max_val = array.max()
+    normalized_array = (array - min_val) / (max_val - min_val)
+    return normalized_array
+
+############################################
+#               Model Functions            #
+############################################
+
+def build_model_rgb(X, y, epochs=40, batch_size=32):
+	model = tf.keras.models.Sequential()
+	model.add(tf.keras.layers.Input(shape=(112,), name="input_embedding"))
+	model.add(tf.keras.layers.Dense(12, activation="relu"))
+	model.add(tf.keras.layers.Dense(8, activation="relu"))
+	model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
+
+	model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), loss="binary_crossentropy", metrics=["accuracy"])
+	model.fit(X, y, epochs=epochs, batch_size=batch_size, validation_split=0.2)
+	return model
