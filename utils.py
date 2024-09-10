@@ -6,6 +6,7 @@ from scipy.io import wavfile
 import scipy.signal as sps
 import tensorflow as tf
 import numpy as np
+import math
 
 
 #####################################
@@ -236,6 +237,14 @@ def normalize(array):
     max_val = array.max()
     normalized_array = (array - min_val) / (max_val - min_val)
     return normalized_array
+
+def softmax(x):
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum()
+
+def softmax_(x):
+    e_x = [math.exp(i - max(x)) for i in x]
+    return [i / sum(e_x) for i in e_x]
 
 ############################################
 #               Model Functions            #
