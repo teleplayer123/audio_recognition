@@ -42,8 +42,8 @@ def convert_spectrogram(data):
         del mres
         gc.collect()
     res = np.array(res)
-    max_arg = np.argmax(res)
-    min_arg = np.argmin(res)
+    max_arg = np.max(res)
+    min_arg = np.min(res)
     res = (res - min_arg) / (max_arg - min_arg)
     del max_arg
     del min_arg

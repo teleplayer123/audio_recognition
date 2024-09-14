@@ -48,8 +48,8 @@ def convert_spectrogram(data):
     del data
     gc.collect()
     res = np.array(res)
-    amax = np.argmax(res)
-    amin = np.argmin(res)
+    amax = np.max(res)
+    amin = np.min(res)
     nres = (res - amin) / (amax - amin)
     del amax
     del amin
