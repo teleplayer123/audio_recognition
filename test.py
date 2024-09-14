@@ -102,6 +102,7 @@ def convert_spectrogram(data):
     res = []
     for i in range(0, len(data), fft_size):
         spec = np.fft.fft(data[i:i+fft_size])
+        spec = spec * np.hamming(len(spec))
         spec = np.abs(spec)
         spec[0] = 0
         mspec = downsample_waveform(spec, n_bins)
