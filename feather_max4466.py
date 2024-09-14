@@ -58,6 +58,7 @@ def convert_spectrogram(data):
     return np.array(nres)
 
 def set_color(led, color):
+    led[0] = (0, 0, 0)
     if color.lower() == "red":
         led[0] = (255, 0, 0)
     elif color.lower() == "green":
