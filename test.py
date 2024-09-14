@@ -29,7 +29,7 @@ def show_blue_spectrogram():
         data = a[i]
         plt.subplot(rows, cols, i+1)
         plt.plot(data)
-        plt.show()
+    plt.show()
 
 def show_green_spectrogram():
     data = []
@@ -47,7 +47,7 @@ def show_green_spectrogram():
         data = a[i]
         plt.subplot(rows, cols, i+1)
         plt.plot(data)
-        plt.show()
+    plt.show()
 
 def show_red_spectrogram():
     data = []
@@ -65,10 +65,10 @@ def show_red_spectrogram():
         data = a[i]
         plt.subplot(rows, cols, i+1)
         plt.plot(data)
-        plt.show()
+    plt.show()
 
 def show_color_spectrograph(data):
-    spec = get_spectrogram(data)
+    spec = convert_psd_spectrogram(data)
     h = np.shape(spec)[0]
     w = np.shape(spec)[1]
     x = np.linspace(0, np.size(spec), num=w, dtype=int)
@@ -111,6 +111,7 @@ def convert_spectrogram(data):
     return np.array(nres)
 
 data = get_data("blue.txt")
+print(len(data))
 data = convert_spectrogram(data)
 print("\nScores for Blue Data\n------------------------")
 s = blue_model.score(data)
