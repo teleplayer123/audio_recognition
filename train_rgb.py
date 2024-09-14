@@ -79,17 +79,17 @@ def load_data(data_dir, color="red"):
         green = 1
     elif color == "blue":
         blue = 1
-    red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)[:5]]
+    red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)]
     for wav_file in red_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
         labels.append(red)
-    green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)[:5]]
+    green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)]
     for wav_file in green_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
         labels.append(green)
-    blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)[5:10]]
+    blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)]
     for wav_file in blue_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
@@ -106,11 +106,11 @@ print(np.shape(blue_labels))
 
 X_train, X_test, y_train, y_test = train_test_split(blue_audio_data, blue_labels, test_size=0.2, random_state=42)
 
-def normalize(array):
-    min_val = array.min()
-    max_val = array.max()
-    normalized_array = (array - min_val) / (max_val - min_val)
-    return normalized_array
+def normalize(arr):
+    min_val = np.min(arr)
+    max_val = np.max(arr)
+    normalized_arr = (arr - min_val) / (max_val - min_val)
+    return normalized_arr
 
 X_norm_train = np.array([normalize(x) for x in X_train])
 print(np.shape(X_norm_train))
@@ -123,7 +123,7 @@ model.add(tf.keras.layers.Dense(4, activation="relu"))
 model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
 
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), loss="binary_crossentropy", metrics=["accuracy"])
-model.fit(X_norm_train, y_train, epochs=40, batch_size=32, validation_split=0.2)
+model.fit(X_norm_train, y_train, epochs=40, validation_split=0.2)
 
 weights_biases = {}
 for i, layer in enumerate(model.layers):
