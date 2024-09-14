@@ -96,7 +96,7 @@ def load_data(data_dir, color="red"):
         labels.append(blue)
     return np.array(feature_arr), np.array(labels)
 
-color = "red"
+color = "blue"
 audio_data, labels = load_data(data_dir, color=color)
 
 print(np.shape(audio_data))
@@ -121,7 +121,7 @@ model.add(tf.keras.layers.Dense(4, activation="relu"))
 model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
 
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.02), loss="binary_crossentropy", metrics=["accuracy"])
-model.fit(X_norm_train, y_train, epochs=60, validation_split=0.2)
+model.fit(X_norm_train, y_train, epochs=60, validation_split=0.2, callbacks=tf.keras.callbacks.EarlyStopping(verbose=1, patience=3))
 
 weights_biases = {}
 for i, layer in enumerate(model.layers):
