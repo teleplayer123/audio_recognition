@@ -58,7 +58,7 @@ def load_dataset(data_dir):
         wav_files = [os.path.join(label_dir, fname) for fname in os.listdir(label_dir)]
         feature_arr = []
         for wav_file in wav_files:
-            xfeatures = extract_features(wav_file)
+            xfeatures = extract_features(wav_file, window_size=64, num_bins=8)
             feature_arr.append(xfeatures)
         waveforms.append(np.array(feature_arr))
         del feature_arr
@@ -96,13 +96,13 @@ def load_data(data_dir, color="red"):
         labels.append(blue)
     return np.array(feature_arr), np.array(labels)
 
-color = "blue"
+color = "green"
 audio_data, labels = load_data(data_dir, color=color)
 
 print(np.shape(audio_data))
 print(np.shape(labels))
 
-X_train, X_test, y_train, y_test = train_test_split(audio_data, labels, test_size=0.2, random_state=42)
+X_train, y_train = audio_data, labels
 
 def normalize(arr):
     min_val = np.min(arr)
@@ -116,12 +116,12 @@ print(np.shape(y_train))
 
 model = tf.keras.models.Sequential()
 model.add(tf.keras.layers.Input(shape=(128,), name="input_embedding"))
+model.add(tf.keras.layers.Dense(16, activation="relu"))
 model.add(tf.keras.layers.Dense(8, activation="relu"))
-model.add(tf.keras.layers.Dense(4, activation="relu"))
 model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
 
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.02), loss="binary_crossentropy", metrics=["accuracy"])
-model.fit(X_norm_train, y_train, epochs=60, validation_split=0.2, callbacks=tf.keras.callbacks.EarlyStopping(verbose=1, patience=3))
+model.fit(X_norm_train, y_train, epochs=60)#callbacks=tf.keras.callbacks.EarlyStopping(verbose=1, patience=3))
 
 weights_biases = {}
 for i, layer in enumerate(model.layers):
