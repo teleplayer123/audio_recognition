@@ -1,7 +1,5 @@
 import os
 import numpy as np
-from scipy.io import wavfile
-import scipy.signal as sps
 import matplotlib.pyplot as plt
 from models.models_lib import blue_model
 from models.models_lib import green_model
@@ -15,7 +13,7 @@ def convert_psd_spectrogram(x, fft_size=64):
         spectrogram[i,:] = 10*np.log10(np.abs(np.fft.fftshift(np.fft.fft(x[i*fft_size:(i+1)*fft_size])))**2)
     return spectrogram
 
-def test_blue_spectrogram():
+def show_blue_spectrogram():
     data = []
     f = os.path.join(os.getcwd(), "blue.txt")
     with open(f, "r") as fh:
@@ -32,6 +30,51 @@ def test_blue_spectrogram():
         plt.subplot(rows, cols, i+1)
         plt.plot(data)
         plt.show()
+
+def show_green_spectrogram():
+    data = []
+    f = os.path.join(os.getcwd(), "green.txt")
+    with open(f, "r") as fh:
+        for line in fh:
+            data.append(float(line))
+    data = np.array(data)
+    spec = convert_psd_spectrogram(data)
+    a = spec
+    plt.figure(figsize=(12, 8))
+    rows = 3
+    cols = 3
+    for i in range(9):
+        data = a[i]
+        plt.subplot(rows, cols, i+1)
+        plt.plot(data)
+        plt.show()
+
+def show_red_spectrogram():
+    data = []
+    f = os.path.join(os.getcwd(), "red.txt")
+    with open(f, "r") as fh:
+        for line in fh:
+            data.append(float(line))
+    data = np.array(data)
+    spec = convert_psd_spectrogram(data)
+    a = spec
+    plt.figure(figsize=(12, 8))
+    rows = 3
+    cols = 3
+    for i in range(9):
+        data = a[i]
+        plt.subplot(rows, cols, i+1)
+        plt.plot(data)
+        plt.show()
+
+def show_color_spectrograph(data):
+    spec = get_spectrogram(data)
+    h = np.shape(spec)[0]
+    w = np.shape(spec)[1]
+    x = np.linspace(0, np.size(spec), num=w, dtype=int)
+    y = range(h)
+    plt.pcolormesh(x, y, spec)
+    plt.show()
 
 def get_data(filename):
     data = []
@@ -102,3 +145,5 @@ print("Green Score: {}".format(s))
 
 s = red_model.score(data)
 print("Red Score: {}".format(s))
+
+show_blue_spectrogram()
