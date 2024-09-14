@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.io import wavfile
+import scipy.signal as sps
 from models.models_lib import blue_model
 from models.models_lib import green_model
 from models.models_lib import red_model
@@ -110,8 +112,15 @@ def convert_spectrogram(data):
     nres = (res - amin) / (amax - amin)
     return np.array(nres)
 
+blue_file = os.path.join(os.getcwd(), "rgb_wavs", "rgb", "blue", "blue5.wav")
+sr, data = wavfile.read(blue_file)
+data = sps.resample(data, 8192)
+waveform = convert_spectrogram(data)
+s = blue_model.score(waveform[:128])
+print("\nFirst Score for Blue Data\n------------------------")
+print("Blue Score: {}".format(s))
+
 data = get_data("blue.txt")
-print(len(data))
 data = convert_spectrogram(data)
 print("\nScores for Blue Data\n------------------------")
 s = blue_model.score(data)

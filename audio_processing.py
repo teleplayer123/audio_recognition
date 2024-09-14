@@ -266,3 +266,35 @@ def convert_psd_spectrogram(x, fft_size=1024):
     for i in range(num_rows):
         spectrogram[i,:] = 10*np.log10(np.abs(np.fft.fftshift(np.fft.fft(x[i*fft_size:(i+1)*fft_size])))**2)
     return spectrogram
+
+def load_data_rgb(data_dir, color="red"):
+    labels = []
+    feature_arr = []
+    red = 0
+    green = 0
+    blue = 0
+    red_dir = os.path.join(data_dir, "red")
+    green_dir = os.path.join(data_dir, "green")
+    blue_dir = os.path.join(data_dir, "blue")
+    if color == "red":
+        red = 1
+    elif color == "green":
+        green = 1
+    elif color == "blue":
+        blue = 1
+    red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)[:5]]
+    for wav_file in red_files:
+        xfeatures = extract_features(wav_file)
+        feature_arr.append(xfeatures)
+        labels.append(red)
+    green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)[:5]]
+    for wav_file in green_files:
+        xfeatures = extract_features(wav_file)
+        feature_arr.append(xfeatures)
+        labels.append(green)
+    blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)[:5]]
+    for wav_file in blue_files:
+        xfeatures = extract_features(wav_file)
+        feature_arr.append(xfeatures)
+        labels.append(blue)
+    return np.array(feature_arr), np.array(labels)
