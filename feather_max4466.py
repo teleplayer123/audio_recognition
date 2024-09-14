@@ -14,10 +14,10 @@ gc.collect()
 print("Free Memory: {}".format(gc.mem_free()))
 
 def read_audio_data(mic):
-    gc.collect()
-    print("Free Memory: {}".format(gc.mem_free()))
     n_samples = 8192
     data = np.zeros((n_samples))
+    print("speak...")
+    time.sleep(1)
     for i in range(n_samples):
         data[i] = (100*((mic.value * 3.3 / 65536) - 1.65))
         gc.collect()
@@ -77,8 +77,7 @@ led.brightness = 0.3
 
 #setup mic
 mic = analogio.AnalogIn(board.A2)
-print("speak..")
-time.sleep(2)
+
 while True:
     data = read_audio_data(mic)
     gc.collect()
@@ -108,8 +107,7 @@ while True:
         del c
         gc.collect()
         time.sleep(4)
-        print("speak...")
-        time.sleep(2)
+        print("wait...")
     else:
         del data
         gc.collect()
