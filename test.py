@@ -21,3 +21,12 @@ def convert_psd_spectrogram(x, fft_size=64):
 
 spec = convert_psd_spectrogram(data)
 
+a = spec
+plt.figure(figsize=(12, 8))
+rows = 3
+cols = 3
+for i in range(9):
+  data = a[i]
+  plt.subplot(rows, cols, i+1)
+  plt.plot(data)
+plt.show()
