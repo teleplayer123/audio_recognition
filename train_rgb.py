@@ -96,15 +96,13 @@ def load_data(data_dir, color="red"):
         labels.append(blue)
     return np.array(feature_arr), np.array(labels)
 
+color = "red"
+audio_data, labels = load_data(data_dir, color=color)
 
-red_audio_data, red_labels = load_data(data_dir, color="red")
-green_audio_data, green_labels = load_data(data_dir, color="green")
-blue_audio_data, blue_labels = load_data(data_dir, color="blue")
+print(np.shape(audio_data))
+print(np.shape(labels))
 
-print(np.shape(blue_audio_data))
-print(np.shape(blue_labels))
-
-X_train, X_test, y_train, y_test = train_test_split(blue_audio_data, blue_labels, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(audio_data, labels, test_size=0.2, random_state=42)
 
 def normalize(arr):
     min_val = np.min(arr)
@@ -122,8 +120,8 @@ model.add(tf.keras.layers.Dense(8, activation="relu"))
 model.add(tf.keras.layers.Dense(4, activation="relu"))
 model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
 
-model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), loss="binary_crossentropy", metrics=["accuracy"])
-model.fit(X_norm_train, y_train, epochs=40, validation_split=0.2)
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.02), loss="binary_crossentropy", metrics=["accuracy"])
+model.fit(X_norm_train, y_train, epochs=60, validation_split=0.2)
 
 weights_biases = {}
 for i, layer in enumerate(model.layers):
@@ -131,7 +129,7 @@ for i, layer in enumerate(model.layers):
     weights_biases[f'w{i}'] = weights
     weights_biases[f'b{i}'] = biases
 
-saved_path = os.path.join(os.getcwd(), "models", "blue_weights_biases.npz")
+saved_path = os.path.join(os.getcwd(), "models", f"{color}_weights_biases.npz")
 np.savez(saved_path, **weights_biases)
 data = np.load(saved_path)
 
@@ -144,7 +142,7 @@ def load_weights_biases(path):
     data_dict = {k: v for k, v in data.items()}
     return data_dict
 
-def predict_template(path, model_name="red_model"):
+def predict_template(path, model_name):
     data = load_weights_biases(path)
     template = \
 f"""import ulab.numpy as np
@@ -169,6 +167,6 @@ def score(t):
         fh.write(template)
     return outfile
 
-data_path = os.path.join(os.getcwd(), "models", "blue_weights_biases.npz")
-py_path = predict_template(data_path, model_name="blue_model")
+data_path = os.path.join(os.getcwd(), "models", f"{color}_weights_biases.npz")
+py_path = predict_template(data_path, model_name=f"{color}_model")
 print(py_path)
