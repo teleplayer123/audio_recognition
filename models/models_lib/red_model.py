@@ -1,4 +1,5 @@
-import ulab.numpy as np
+# import ulab.numpy as np
+import numpy as np
 
 def relu(t):
     return np.maximum(0, t)
