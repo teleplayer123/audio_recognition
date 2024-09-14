@@ -10,12 +10,19 @@ import green_model
 import blue_model
 
 
+gc.collect()
+print("Free Memory: {}".format(gc.mem_free()))
+
 def read_audio_data(mic):
+    gc.collect()
+    print("Free Memory: {}".format(gc.mem_free()))
     n_samples = 8192
-    data = []
+    data = np.zeros((n_samples))
     for i in range(n_samples):
-        data.append(100*((mic.value * 3.3 / 65536) - 1.65))
-    return np.array(data)
+        data[i] = (100*((mic.value * 3.3 / 65536) - 1.65))
+        gc.collect()
+    gc.collect()
+    return data
 
 def downsample_waveform(waveform, n_bins):
     waveforms = np.zeros(n_bins)
@@ -38,6 +45,8 @@ def convert_spectrogram(data):
         del spec
         del mspec
         gc.collect()
+    del data
+    gc.collect()
     res = np.array(res)
     amax = np.argmax(res)
     amin = np.argmin(res)
@@ -68,26 +77,44 @@ led.brightness = 0.3
 
 #setup mic
 mic = analogio.AnalogIn(board.A2)
-
+print("speak..")
+time.sleep(2)
 while True:
     data = read_audio_data(mic)
-    if len(data) >= 8192:
+    gc.collect()
+    if np.sum(data) > 1:
         print("data len: {}".format(len(data)))
         spec = convert_spectrogram(data)
+        del data
+        gc.collect()
         print("spectrogram len: {}".format(len(spec)))
         rscore = red_model.score(spec)[0]
+        gc.collect()
         print("Red Score: {}".format(rscore))
         gscore = green_model.score(spec)[0]
+        gc.collect()
         print("Green Score: {}".format(gscore))
         bscore = blue_model.score(spec)[0]
+        gc.collect()
         print("Blue Score: {}".format(bscore))
         c = get_color(rscore, gscore, bscore)
-        set_color(led, c)
-        del data
-        del spec
         gc.collect()
-        time.sleep(5)
+        del spec
+        del rscore
+        del gscore
+        del bscore
+        gc.collect()
+        set_color(led, c)
+        del c
+        gc.collect()
+        time.sleep(4)
         print("speak...")
+        time.sleep(2)
+    else:
+        del data
+        gc.collect()
+        print("Free Memory: {}".format(gc.mem_free()))
 
-
+gc.collect()
+print("Free Memory: {}".format(gc.mem_free()))
 
