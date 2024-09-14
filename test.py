@@ -1,9 +1,23 @@
-from models.models128_lib.red_model import score
-import numpy as np
 import os
-from audio_processing import extract_features
+import numpy as np
+from scipy.io import wavfile
+import scipy.signal as sps
+import matplotlib.pyplot as plt
 
-red0 = os.path.join(os.getcwd(), "rgb_wavs", "rgb", "red", "red0.wav")
-arr = extract_features(red0, target_sample_rate=8192)
-s = score(arr)[0]
-print("score: {}".format(s))
+data = []
+f = os.path.join(os.getcwd(), "blue.txt")
+with open(f, "r") as fh:
+    for line in fh:
+        data.append(float(line))
+
+data = np.array(data)
+
+def convert_psd_spectrogram(x, fft_size=64):
+    num_rows = len(x) // fft_size
+    spectrogram = np.zeros((num_rows, fft_size))
+    for i in range(num_rows):
+        spectrogram[i,:] = 10*np.log10(np.abs(np.fft.fftshift(np.fft.fft(x[i*fft_size:(i+1)*fft_size])))**2)
+    return spectrogram
+
+spec = convert_psd_spectrogram(data)
+

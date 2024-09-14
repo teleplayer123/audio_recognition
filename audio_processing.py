@@ -260,8 +260,7 @@ def load_data(data_dir):
         del feature_arr
     return np.array(waveforms), np.array(labels)
 
-def convert_psd_spectrogram(x):
-    fft_size = 1024
+def convert_psd_spectrogram(x, fft_size=1024):
     num_rows = len(x) // fft_size
     spectrogram = np.zeros((num_rows, fft_size))
     for i in range(num_rows):

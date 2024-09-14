@@ -15,7 +15,7 @@ print("Free Memory: {}".format(gc.mem_free()))
 
 def read_audio_data(mic):
     n_samples = 8192
-    data = np.zeros((n_samples))
+    data = np.empty((n_samples))
     print("speak...")
     time.sleep(1)
     for i in range(n_samples):
@@ -98,6 +98,7 @@ while True:
         gc.collect()
         print("Blue Score: {}".format(bscore))
         c = get_color(rscore, gscore, bscore)
+        print("color: {}".format(c))
         gc.collect()
         del spec
         del rscore
@@ -113,7 +114,3 @@ while True:
         del data
         gc.collect()
         print("Free Memory: {}".format(gc.mem_free()))
-
-gc.collect()
-print("Free Memory: {}".format(gc.mem_free()))
-
