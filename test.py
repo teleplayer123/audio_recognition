@@ -158,3 +158,5 @@ s = red_model.score(data)
 print("Red Score: {}".format(s))
 
 show_blue_spectrogram()
+show_green_spectrogram()
+show_red_spectrogram()
