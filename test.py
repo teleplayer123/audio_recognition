@@ -6,6 +6,7 @@ import scipy.signal as sps
 from models.models_lib import blue_model
 from models.models_lib import green_model
 from models.models_lib import red_model
+import tensorflow as tf
 
 
 def convert_psd_spectrogram(x, fft_size=64):
@@ -69,12 +70,30 @@ def show_red_spectrogram():
         plt.plot(data)
     plt.show()
 
+def get_spectrogram(waveform):
+	# Convert the waveform to a spectrogram via a STFT (Short-Time Fourier Transform)
+	spectrogram = tf.signal.stft(waveform, frame_length=255, frame_step=128)
+	# Obtain the magnitude of the STFT.
+	spectrogram = tf.abs(spectrogram)
+	# Add a `channels` dimension, so that the spectrogram can be used
+	# as image-like input data with convolution layers (which expect
+	# shape (`batch_size`, `height`, `width`, `channels`).
+	spectrogram = spectrogram[..., tf.newaxis]
+	return spectrogram
+
 def show_color_spectrograph(data):
-    spec = convert_psd_spectrogram(data)
+    spec = np.array(get_spectrogram(data))
+    if len(spec.shape) > 2:
+        assert len(spec.shape) == 3
+        spec = np.squeeze(spec, axis=-1)
+    spec = np.log(spec.T + np.finfo(float).eps)
     h = np.shape(spec)[0]
     w = np.shape(spec)[1]
     x = np.linspace(0, np.size(spec), num=w, dtype=int)
     y = range(h)
+    plt.figure(figsize=(12, 8))
+    plt.title('Waveform')
+    plt.xlim([0, 8200])
     plt.pcolormesh(x, y, spec)
     plt.show()
 
@@ -116,6 +135,7 @@ def convert_spectrogram(data):
 blue_file = os.path.join(os.getcwd(), "rgb_wavs", "rgb", "blue", "blue5.wav")
 sr, data = wavfile.read(blue_file)
 data = sps.resample(data, 8192)
+orig_data = data
 waveform = convert_spectrogram(data)
 s = blue_model.score(waveform[:128])
 print("\nFirst Score for Blue Data\n------------------------")
@@ -157,6 +177,8 @@ print("Green Score: {}".format(s))
 s = red_model.score(data)
 print("Red Score: {}".format(s))
 
-show_blue_spectrogram()
-show_green_spectrogram()
-show_red_spectrogram()
+# show_blue_spectrogram()
+# show_green_spectrogram()
+# show_red_spectrogram()
+
+show_color_spectrograph(orig_data)
