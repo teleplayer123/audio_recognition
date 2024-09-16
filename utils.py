@@ -49,9 +49,8 @@ def play_wavedir(path):
     for wav in file_list:
         ws.PlaySound(wav, ws.SND_FILENAME)
 
-def load_wav_16k_mono(fname):
+def load_wav_16k_mono(fname, rate_out=16000):
     sample_rate, data = wavfile.read(fname)
-    rate_out=16000
     n_samples = round(len(data) * rate_out / sample_rate)
     wav = sps.resample(data, n_samples)
     return wav
