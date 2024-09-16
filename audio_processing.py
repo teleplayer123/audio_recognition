@@ -5,21 +5,21 @@ import seaborn as sns
 import tensorflow as tf
 import scipy.signal as sps
 from scipy.io import wavfile
-# import tensorflow_io as tfio
+import tensorflow_io as tfio
 
 
 
-# @tf.function
-# def load_wav_16k_mono(filename):
-# 	""" Load a WAV file, convert it to a float tensor, resample to 16 kHz single-channel audio. """
-# 	file_contents = tf.io.read_file(filename)
-# 	wav, sample_rate = tf.audio.decode_wav(
-# 			file_contents,
-# 			desired_channels=1)
-# 	wav = tf.squeeze(wav, axis=-1)
-# 	sample_rate = tf.cast(sample_rate, dtype=tf.int64)
-# 	wav = tfio.audio.resample(wav, rate_in=sample_rate, rate_out=16000)
-# 	return wav
+@tf.function
+def load_wav_16k_mono(filename):
+	""" Load a WAV file, convert it to a float tensor, resample to 16 kHz single-channel audio. """
+	file_contents = tf.io.read_file(filename)
+	wav, sample_rate = tf.audio.decode_wav(
+			file_contents,
+			desired_channels=1)
+	wav = tf.squeeze(wav, axis=-1)
+	sample_rate = tf.cast(sample_rate, dtype=tf.int64)
+	wav = tfio.audio.resample(wav, rate_in=sample_rate, rate_out=16000)
+	return wav
 
 def take_first(ds):
 	vals = [(audio, labels) for audio, labels in ds.take(1)][0]  
@@ -282,19 +282,45 @@ def load_data_rgb(data_dir, color="red"):
         green = 1
     elif color == "blue":
         blue = 1
-    red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)[:5]]
+    red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)]
     for wav_file in red_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
         labels.append(red)
-    green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)[:5]]
+    green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)]
     for wav_file in green_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
         labels.append(green)
-    blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)[:5]]
+    blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)]
     for wav_file in blue_files:
         xfeatures = extract_features(wav_file)
+        feature_arr.append(xfeatures)
+        labels.append(blue)
+    return np.array(feature_arr), np.array(labels)
+
+def load_data_rgb_multi_class(data_dir, color="red"):
+    labels = []
+    feature_arr = []
+    red = 0
+    green = 1
+    blue = 2
+    red_dir = os.path.join(data_dir, "red")
+    green_dir = os.path.join(data_dir, "green")
+    blue_dir = os.path.join(data_dir, "blue")
+    red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)]
+    for wav_file in red_files:
+        xfeatures = load_wav_16k_mono(wav_file)
+        feature_arr.append(xfeatures)
+        labels.append(red)
+    green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)]
+    for wav_file in green_files:
+        xfeatures = load_wav_16k_mono(wav_file)
+        feature_arr.append(xfeatures)
+        labels.append(green)
+    blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)]
+    for wav_file in blue_files:
+        xfeatures = load_wav_16k_mono(wav_file)
         feature_arr.append(xfeatures)
         labels.append(blue)
     return np.array(feature_arr), np.array(labels)
