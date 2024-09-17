@@ -49,20 +49,6 @@ def play_wavedir(path):
     for wav in file_list:
         ws.PlaySound(wav, ws.SND_FILENAME)
 
-def load_wav_16k_mono(fname, rate_out=16000):
-    sample_rate, data = wavfile.read(fname)
-    # n_samples = round(len(data) * rate_out / sample_rate)
-    n_samples = rate_out
-    wav = sps.resample(data, n_samples)
-    return wav
-
-def convert_psd_spectrogram(x, fft_size=1024):
-    num_rows = len(x) // fft_size
-    spectrogram = np.zeros((num_rows, fft_size))
-    for i in range(num_rows):
-        spectrogram[i,:] = 10*np.log10(np.abs(np.fft.fftshift(np.fft.fft(x[i*fft_size:(i+1)*fft_size])))**2)
-    return spectrogram
-
 #####################################
 #       Convert/Save Functions      #
 #####################################
@@ -260,3 +246,101 @@ def build_model_rgb(X, y, epochs=40, batch_size=32):
 	model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), loss="binary_crossentropy", metrics=["accuracy"])
 	model.fit(X, y, epochs=epochs, batch_size=batch_size, validation_split=0.2)
 	return model
+
+############################################
+#                Load Data                 #
+############################################
+
+def load_wav_16k_mono(fname, rate_out=16000):
+    sample_rate, data = wavfile.read(fname)
+    # n_samples = round(len(data) * rate_out / sample_rate)
+    wav = sps.resample(data, rate_out)
+    return wav
+
+def load_wav_16k_mono_dynamic(fname, rate_out=16000):
+    sample_rate, data = wavfile.read(fname)
+    n_samples = round(len(data) * rate_out / sample_rate)
+    wav = sps.resample(data, n_samples)
+    return wav
+
+def load_data_rgb_multi_class(data_dir):
+    labels = []
+    feature_arr = []
+    red = 0
+    green = 1
+    blue = 2
+    red_dir = os.path.join(data_dir, "red")
+    green_dir = os.path.join(data_dir, "green")
+    blue_dir = os.path.join(data_dir, "blue")
+    red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)]
+    for wav_file in red_files:
+        xfeatures = load_wav_16k_mono(wav_file)
+        feature_arr.append(xfeatures.tolist())
+        labels.append(red)
+    green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)]
+    for wav_file in green_files:
+        xfeatures = load_wav_16k_mono(wav_file)
+        feature_arr.append(xfeatures.tolist())
+        labels.append(green)
+    blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)[:10]]
+    for wav_file in blue_files:
+        xfeatures = load_wav_16k_mono(wav_file)
+        feature_arr.append(xfeatures.tolist())
+        labels.append(blue)
+    return np.array(feature_arr), np.array(labels)
+
+def load_data(data_dir):
+    waveforms = []
+    labels = []
+    for dirname in os.listdir(data_dir):
+        label_dir = os.path.join(data_dir, dirname)
+        if not dirname in labels:
+            labels.append(dirname)
+        wav_files = [os.path.join(label_dir, fname) for fname in os.listdir(label_dir)]
+        feature_arr = []
+        for wav_file in wav_files:
+            xfeatures = extract_features(wav_file)
+            feature_arr.append(xfeatures)
+        waveforms.append(np.array(feature_arr))
+        del feature_arr
+    return np.array(waveforms), np.array(labels)
+
+def convert_psd_spectrogram(x, fft_size=1024):
+    num_rows = len(x) // fft_size
+    spectrogram = np.zeros((num_rows, fft_size))
+    for i in range(num_rows):
+        spectrogram[i,:] = 10*np.log10(np.abs(np.fft.fftshift(np.fft.fft(x[i*fft_size:(i+1)*fft_size])))**2)
+    return spectrogram
+
+def load_data_rgb(data_dir, color="red"):
+    labels = []
+    feature_arr = []
+    red = 0
+    green = 0
+    blue = 0
+    red_dir = os.path.join(data_dir, "red")
+    green_dir = os.path.join(data_dir, "green")
+    blue_dir = os.path.join(data_dir, "blue")
+    if color == "red":
+        red = 1
+    elif color == "green":
+        green = 1
+    elif color == "blue":
+        blue = 1
+    red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)]
+    for wav_file in red_files:
+        xfeatures = extract_features(wav_file)
+        feature_arr.append(xfeatures)
+        labels.append(red)
+    green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)]
+    for wav_file in green_files:
+        xfeatures = extract_features(wav_file)
+        feature_arr.append(xfeatures)
+        labels.append(green)
+    blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)]
+    for wav_file in blue_files:
+        xfeatures = extract_features(wav_file)
+        feature_arr.append(xfeatures)
+        labels.append(blue)
+    return np.array(feature_arr), np.array(labels)
+
