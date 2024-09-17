@@ -298,10 +298,17 @@ def load_data_rgb(data_dir, color="red"):
         labels.append(blue)
     return np.array(feature_arr), np.array(labels)
 
-def load_wav_16k_mono(fname):
+def load_wav_16k_mono_dynamic(fname):
     sample_rate, data = wavfile.read(fname)
     rate_out=16000
     n_samples = round(len(data) * rate_out / sample_rate)
+    wav = sps.resample(data, n_samples)
+    return wav
+
+def load_wav_16k_mono(fname, rate_out=16000):
+    sample_rate, data = wavfile.read(fname)
+    # n_samples = round(len(data) * rate_out / sample_rate)
+    n_samples = rate_out
     wav = sps.resample(data, n_samples)
     return wav
 

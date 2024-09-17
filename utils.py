@@ -51,7 +51,8 @@ def play_wavedir(path):
 
 def load_wav_16k_mono(fname, rate_out=16000):
     sample_rate, data = wavfile.read(fname)
-    n_samples = round(len(data) * rate_out / sample_rate)
+    # n_samples = round(len(data) * rate_out / sample_rate)
+    n_samples = rate_out
     wav = sps.resample(data, n_samples)
     return wav
 
