@@ -251,16 +251,22 @@ def build_model_rgb(X, y, epochs=40, batch_size=32):
 #                Load Data                 #
 ############################################
 
-def load_wav_16k_mono(fname, rate_out=16000):
+def load_wav_mono(fname, rate_out=16000):
     sample_rate, data = wavfile.read(fname)
     # n_samples = round(len(data) * rate_out / sample_rate)
     wav = sps.resample(data, rate_out)
     return wav
 
-def load_wav_16k_mono_dynamic(fname, rate_out=16000):
-    sample_rate, data = wavfile.read(fname)
-    n_samples = round(len(data) * rate_out / sample_rate)
-    wav = sps.resample(data, n_samples)
+def load_wav_16k_mono(filename, rate_out=16000):
+    """ Load a WAV file, convert it to a float tensor, resample to 16 kHz single-channel audio. """
+    file_contents = tf.io.read_file(filename)
+    wav, sample_rate = tf.audio.decode_wav(
+          file_contents,
+          desired_channels=1)
+    wav = tf.squeeze(wav, axis=-1)
+    sample_rate = tf.cast(sample_rate, dtype=tf.int64)
+    wav = sps.resample(wav, num=rate_out)
+    wav = tf.convert_to_tensor(wav, dtype=tf.int64)
     return wav
 
 def load_data_rgb_multi_class(data_dir):
