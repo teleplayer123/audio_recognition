@@ -261,9 +261,9 @@ def load_wav_mono(fname, rate_out=16000):
 @tf.function
 def load_wav_16k_mono(filename):
     """ Load a WAV file, convert it to a float tensor, resample to 16 kHz single-channel audio. 
-        !pip install -q "tensorflow==2.11.*"
+        pip install -q "tensorflow==2.11.*"
         # tensorflow_io 0.28 is compatible with TensorFlow 2.11
-        !pip install -q "tensorflow_io==0.28.*"
+        pip install -q "tensorflow_io==0.28.*"
     """
     file_contents = tf.io.read_file(filename)
     wav, sample_rate = tf.audio.decode_wav(
