@@ -4,6 +4,7 @@ import pyaudio
 import wave
 from scipy.io import wavfile
 import scipy.signal as sps
+import subprocess
 import tensorflow as tf
 import tensorflow_io as tfio
 import numpy as np
@@ -53,6 +54,12 @@ def play_wavedir(path):
 #####################################
 #       Convert/Save Functions      #
 #####################################
+
+def convert_tflite_model2c(tflite_fname):
+    """Supported only on linux/wsl"""
+    cmd = "xxd -i {} > model_data.cc".format(tflite_fname)
+    res = subprocess.check_output(cmd, encoding="utf-8", shell=True)
+    return res
 
 def convert_saved_model_to_tflite(saved_model_dir):
     file_path = os.path.join(os.getcwd(), "models", "model.tflite")
