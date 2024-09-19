@@ -45,6 +45,7 @@ def extract_features(audio_file_path, window_size=1024, num_bins=16, target_samp
         fft_results.extend(fft_magnitude)
     return np.array(fft_results)
 
+
 data_dir = os.path.join(os.getcwd(), "rgb_wavs", "rgb")
 
 def load_dataset(data_dir):
