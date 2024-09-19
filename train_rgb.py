@@ -3,8 +3,7 @@ import numpy as np
 import tensorflow as tf
 import scipy.signal as sps
 from scipy.io import wavfile
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split, cross_val_score
+
 
 def downsample_waveform(waveform, num_bins):
     waveform = np.array(waveform)
@@ -27,12 +26,12 @@ def add_white_noise(audio):
     audio_with_noise = tf.clip_by_value(audio_with_noise, clip_value_min=-1, clip_value_max=1)
     return audio_with_noise
 
-def extract_features(audio_file_path, window_size=1024, num_bins=16, target_sample_rate=8192):
+def extract_features(audio_file_path, window_size=1024, num_bins=16, target_sample_rate=8192, overlap=0):
     sample_rate, audio_data = wavfile.read(audio_file_path)
     resampled_audio = sps.resample(audio_data, target_sample_rate)
     augmented_audio = add_white_noise(resampled_audio)
-    step_size = window_size
-    num_windows = len(augmented_audio) // step_size
+    step_size = window_size - overlap
+    num_windows = (len(augmented_audio) - window_size) // step_size + 1
     fft_results = []
     for i in range(num_windows):
         start_index = i * step_size
@@ -89,14 +88,14 @@ def load_data(data_dir, color="red"):
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
         labels.append(green)
-    blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)]
+    blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)[:10]]
     for wav_file in blue_files:
         xfeatures = extract_features(wav_file)
         feature_arr.append(xfeatures)
         labels.append(blue)
     return np.array(feature_arr), np.array(labels)
 
-color = "green"
+color = "blue"
 audio_data, labels = load_data(data_dir, color=color)
 
 print(np.shape(audio_data))
@@ -121,7 +120,7 @@ model.add(tf.keras.layers.Dense(8, activation="relu"))
 model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
 
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.02), loss="binary_crossentropy", metrics=["accuracy"])
-model.fit(X_norm_train, y_train, epochs=60)#callbacks=tf.keras.callbacks.EarlyStopping(verbose=1, patience=3))
+model.fit(X_norm_train, y_train, epochs=60, validation_split=0.1, callbacks=tf.keras.callbacks.EarlyStopping(verbose=1, patience=3))
 
 weights_biases = {}
 for i, layer in enumerate(model.layers):
@@ -133,9 +132,9 @@ saved_path = os.path.join(os.getcwd(), "models", f"{color}_weights_biases.npz")
 np.savez(saved_path, **weights_biases)
 data = np.load(saved_path)
 
-print(dir(data))
+# print(dir(data))
 data_dict = {k: v for k, v in data.items()}
-print(data_dict.keys())
+# print(data_dict.keys())
 
 def load_weights_biases(path):
     data = np.load(path)

@@ -99,7 +99,7 @@ def show_color_spectrograph(data):
 
 def get_data(filename):
     data = []
-    f = os.path.join(os.getcwd(), filename)
+    f = os.path.join(os.getcwd(), "mic_data", filename)
     with open(f, "r") as fh:
         for line in fh:
             data.append(float(line))
