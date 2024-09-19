@@ -206,6 +206,21 @@ def extract_features(audio_file_path, window_size=1024, num_bins=16, target_samp
         fft_results.extend(fft_magnitude)
     return np.array(fft_results)
 
+def prepare_waveform_data(model, waveforms, labels):
+    def extract_embedding(waveform, label):
+        scores, embeddings, spectrogram = model(waveform)
+        num_embed = np.shape(embeddings)[0]
+        return embeddings, np.repeat(label, num_embed)
+    data = []
+    data_labels = []
+    for waveform, label in zip(waveforms, labels):
+        d, l = extract_embedding(waveform, label)
+        data.extend(d)
+        data_labels.extend(l)
+    data = np.array(data)
+    data_labels = np.array(data_labels)
+    return data, data_labels
+
 ############################################
 #               ML Functions               #
 ############################################
@@ -252,6 +267,16 @@ def build_model_rgb(X, y, epochs=40, batch_size=32):
 	model.fit(X, y, epochs=epochs, batch_size=batch_size, validation_split=0.2)
 	return model
 
+def build_rgb_classifier_layer():
+    rgb_model = tf.keras.Sequential([
+        tf.keras.layers.Input(shape=(1024), dtype=tf.float32,
+                            name='input_embedding'),
+        tf.keras.layers.Dense(512, activation='relu'),
+        tf.keras.layers.Dense(3)
+    ], name='rgb_model')
+    rgb_model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer="adam", metrics=['accuracy'])
+    return rgb_model
+
 ############################################
 #                Load Data                 #
 ############################################
@@ -287,17 +312,17 @@ def load_data_rgb_multi_class(data_dir):
     blue_dir = os.path.join(data_dir, "blue")
     red_files = [os.path.join(red_dir, fname) for fname in os.listdir(red_dir)]
     for wav_file in red_files:
-        xfeatures = load_wav_16k_mono(wav_file)
+        xfeatures = load_wav_mono(wav_file)
         feature_arr.append(xfeatures.tolist())
         labels.append(red)
     green_files = [os.path.join(green_dir, fname) for fname in os.listdir(green_dir)]
     for wav_file in green_files:
-        xfeatures = load_wav_16k_mono(wav_file)
+        xfeatures = load_wav_mono(wav_file)
         feature_arr.append(xfeatures.tolist())
         labels.append(green)
     blue_files = [os.path.join(blue_dir, fname) for fname in os.listdir(blue_dir)[:10]]
     for wav_file in blue_files:
-        xfeatures = load_wav_16k_mono(wav_file)
+        xfeatures = load_wav_mono(wav_file)
         feature_arr.append(xfeatures.tolist())
         labels.append(blue)
     return np.array(feature_arr), np.array(labels)
