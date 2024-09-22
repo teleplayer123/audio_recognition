@@ -40,5 +40,5 @@ def set_color(x, s=None, foreground=True):
 s = "testing"
 
 for x in xs:
-    t = set_text_color(x, s)
+    t = set_color(x, s)
     print(t)
