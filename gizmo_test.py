@@ -20,29 +20,22 @@ xs = (0xff0000, 0xff0a00, 0xff1400, 0xff1e00,
         0x0064ff, 0x0054ff, 0x0044ff, 0x0032ff,
         0x0022ff, 0x0012ff, 0x0002ff, 0x0000ff)
 
-def set_text_color(x, s, foreground=True):
+def set_color(x, s=None, foreground=True):
+    """format text with int tuple (RR, GG, BB)"""
+    r = x >> 16
+    g = (x >> 8) & 0b11111111
+    b = x & 0b11111111
     if foreground == True:
-        f = "\033[38;2;{};{};{}m {}\033[00m"
+        if s == None:
+            f = "\033[38;2;{};{};{}m".format(r, g, b)
+        else:
+            f = "\033[38;2;{};{};{}m {}\033[00m".format(r, g, b, s)
     else:
-        f = "\033[48;2;{};{};{}m {}\033[00m"
-    if type(x) == int:
-        x = hex(x)
-    colors = []
-    split_x = x.split("x")[1]
-    for i in range(0, len(split_x), 2):
-        try:
-            c = int("{}{}".format(split_x[i], split_x[i+1]), 16)
-        except IndexError:
-            c = 0
-        colors.append(c) 
-    if len(colors) < 3:
-        if len(colors) == 2:
-            colors.append(0)
-        elif len(colors) == 1:
-            colors.append(0)
-            colors.append(0)
-    res = f.format(colors[0], colors[1], colors[2], s)
-    return res
+        if s == None:
+            f = "\033[48;2;{};{};{}m".format(r, g, b)
+        else:
+            f = "\033[48;2;{};{};{}m {}\033[00m".format(r, g, b, s)
+    return f
 
 s = "testing"
 
