@@ -9,6 +9,7 @@ import tensorflow as tf
 import tensorflow_io as tfio
 import numpy as np
 import math
+import pandas as pd
 
 
 #####################################
@@ -280,6 +281,12 @@ def build_rgb_classifier_layer():
 ############################################
 #                Load Data                 #
 ############################################
+
+def load_yamnet_model(model_dir):
+    model = tf.saved_model.load(model_dir)
+    class_path = model.class_map_path().numpy().decode()
+    class_names = list(pd.read_csv(class_path)["display_name"])
+    return model, class_names
 
 def load_wav_mono(fname, rate_out=16000):
     sample_rate, data = wavfile.read(fname)
