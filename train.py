@@ -40,7 +40,7 @@ rgb_model = build_rgb_classifier_layer()
 callback = tf.keras.callbacks.EarlyStopping(monitor="loss", patience=3, restore_best_weights=True)
 history = rgb_model.fit(data, data_labels, epochs=40, validation_split=0.1, callbacks=callback)
 
-test_file = os.path.join(os.getcwd(), "rgb_wavs", "rgb", "blue", "blue12.wav")
+test_file = os.path.join(os.getcwd(), "rgb_wavs", "rgb", "blue", "blue16.wav")
 test_data = load_wav_mono(test_file)
 class_dict = {0: "red", 1: "green", 2: "blue"}
 

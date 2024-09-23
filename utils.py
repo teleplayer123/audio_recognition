@@ -287,6 +287,11 @@ def load_wav_mono(fname, rate_out=16000):
     wav = sps.resample(data, rate_out)
     return wav
 
+def extract_embedding(model, waveform, label):
+    scores, embeddings, spectrogram = model(waveform)
+    num_embed = np.shape(embeddings)[0]
+    return embeddings, np.repeat(label, num_embed)
+
 @tf.function
 def load_wav_16k_mono(filename):
     """ Load a WAV file, convert it to a float tensor, resample to 16 kHz single-channel audio. 
