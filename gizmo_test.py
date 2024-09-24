@@ -1,10 +1,10 @@
-# import array
-# import board
-# import audiobusio
-# import displayio
-# from adafruit_gizmo import tft_gizmo
-# from ulab import numpy as np
-# import ulab
+import array
+import board
+import audiobusio
+import displayio
+from adafruit_gizmo import tft_gizmo
+from ulab import numpy as np
+import ulab
 
 xs = (0xff0000, 0xff0a00, 0xff1400, 0xff1e00,
         0xff2800, 0xff3200, 0xff3c00, 0xff4600,
