@@ -13,46 +13,6 @@ import pandas as pd
 
 
 #####################################
-#       Audio Play/Processing       #
-#####################################
-
-def play_wavfile(fname):
-    chunk = 1024  
-    wf = wave.open(fname, 'rb')
-    p = pyaudio.PyAudio()
-    # output = True means play data stream rather than record
-    stream = p.open(format = p.get_format_from_width(wf.getsampwidth()),
-                    channels = wf.getnchannels(),
-                    rate = wf.getframerate(),
-                    output = True)
-    data = wf.readframes(chunk)
-    # wav file is played by writing data to stream
-    while True:
-        if data == "" or len(data) < 1:
-            break
-        stream.write(data)
-        data = wf.readframes(chunk)
-    stream.close()
-    p.terminate()
-
-def play_wav_data(wavdata):
-    """probably don't use this function"""
-    p = pyaudio.PyAudio()
-    stream = p.open(format=pyaudio.paFloat32,
-                    channels=1,
-                    rate=44100,
-                    output=True)
-    data = wavdata.astype(np.float32).tostring()
-    stream.write(data)
-    stream.close()
-    p.terminate()
-
-def play_wavedir(path):
-    file_list = [os.path.join(path, fname) for fname in os.listdir(path)]
-    for wav in file_list:
-        ws.PlaySound(wav, ws.SND_FILENAME)
-
-#####################################
 #       Convert/Save Functions      #
 #####################################
 
@@ -428,3 +388,39 @@ HEATMAP = (0xff0000, 0xff0a00, 0xff1400, 0xff1e00,
            0x00a4ff, 0x0094ff, 0x0084ff, 0x0074ff,
            0x0064ff, 0x0054ff, 0x0044ff, 0x0032ff,
            0x0022ff, 0x0012ff, 0x0002ff, 0x0000ff)
+
+def play_wavfile(fname):
+    chunk = 1024  
+    wf = wave.open(fname, 'rb')
+    p = pyaudio.PyAudio()
+    # output = True means play data stream rather than record
+    stream = p.open(format = p.get_format_from_width(wf.getsampwidth()),
+                    channels = wf.getnchannels(),
+                    rate = wf.getframerate(),
+                    output = True)
+    data = wf.readframes(chunk)
+    # wav file is played by writing data to stream
+    while True:
+        if data == "" or len(data) < 1:
+            break
+        stream.write(data)
+        data = wf.readframes(chunk)
+    stream.close()
+    p.terminate()
+
+def play_wav_data(wavdata):
+    """probably don't use this function"""
+    p = pyaudio.PyAudio()
+    stream = p.open(format=pyaudio.paFloat32,
+                    channels=1,
+                    rate=44100,
+                    output=True)
+    data = wavdata.astype(np.float32).tostring()
+    stream.write(data)
+    stream.close()
+    p.terminate()
+
+def play_wavedir(path):
+    file_list = [os.path.join(path, fname) for fname in os.listdir(path)]
+    for wav in file_list:
+        ws.PlaySound(wav, ws.SND_FILENAME)
