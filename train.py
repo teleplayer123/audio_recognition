@@ -7,7 +7,7 @@ import scipy.signal as sps
 from scipy.io import wavfile
 import matplotlib.pyplot as plt
 import pandas as pd
-from utils import load_data_rgb_multi_class, prepare_waveform_data, build_rgb_classifier_layer, load_wav_mono
+from utils import load_data_rgb_multi_class, prepare_waveform_data, build_rgb_classifier_layer, load_wav_mono, save_weights_biases, load_weights_biases
 
 
 RGB_DATA_DIR = os.path.join(os.getcwd(), "rgb_wavs", "rgb")
@@ -48,3 +48,28 @@ score, embed, spec = yamnet_model(test_data)
 res = rgb_model(embed).numpy()
 inferred_res = class_dict[res.mean(axis=0).argmax()]
 print(f"Inferred Result: {inferred_res}")
+
+#save model weights
+weight_bias_path = os.path.join(os.getcwd(), "models", "rgb_yammnet_weights_biases.npz")
+save_weights_biases(weight_bias_path)
+
+def predict_template(path, model_name):
+    data = load_weights_biases(path)
+    template = \
+f"""import ulab.numpy as np
+
+def relu(t):
+    return np.maximum(0, t)
+
+def score(t):
+    z0 = np.dot(t, np.array({data["w0"].tolist()})) + np.array({data["b0"].tolist()})
+    a0 = relu(z0)
+    res = np.dot(a0, np.array({data["w1"].tolist()})) + np.array({data["b1"].tolist()})
+    return res 
+"""
+    outfile = os.path.join(os.getcwd(), "models", "models_lib", "{}.py".format(model_name))
+    with open(outfile, "w") as fh:
+        fh.write(template)
+    return outfile
+
+predict_template(weight_bias_path, "rgb_yamnet")
