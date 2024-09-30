@@ -40,7 +40,7 @@ rgb_model = build_rgb_classifier_layer()
 callback = tf.keras.callbacks.EarlyStopping(monitor="loss", patience=3, restore_best_weights=True)
 history = rgb_model.fit(data, data_labels, epochs=40, validation_split=0.1, callbacks=callback)
 
-test_file = os.path.join(os.getcwd(), "rgb_wavs", "rgb", "blue", "blue16.wav")
+test_file = os.path.join(os.getcwd(), "rgb_wavs", "rgb", "blue", "blue14.wav")
 test_data = load_wav_mono(test_file)
 class_dict = {0: "red", 1: "green", 2: "blue"}
 
@@ -51,7 +51,8 @@ print(f"Inferred Result: {inferred_res}")
 
 #save model weights
 weight_bias_path = os.path.join(os.getcwd(), "models", "rgb_yammnet_weights_biases.npz")
-save_weights_biases(weight_bias_path)
+fname = "rgb_yammnet_weights_biases"
+save_weights_biases(rgb_model, fname)
 
 def predict_template(path, model_name):
     data = load_weights_biases(path)
@@ -67,7 +68,7 @@ def score(t):
     res = np.dot(a0, np.array({data["w1"].tolist()})) + np.array({data["b1"].tolist()})
     return res 
 """
-    outfile = os.path.join(os.getcwd(), "models", "models_lib", "{}.py".format(model_name))
+    outfile = os.path.join(os.getcwd(), "models", "{}.py".format(model_name))
     with open(outfile, "w") as fh:
         fh.write(template)
     return outfile

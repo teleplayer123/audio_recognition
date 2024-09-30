@@ -71,14 +71,14 @@ def save_labels(labels, outfile="labels.txt"):
 		labels = np.array(labels)
 	labels.tofile(save_path, sep="\n")
 
-def save_weights_biases(model):
+def save_weights_biases(model, filename):
     weights_biases = {}
     for i, layer in enumerate(model.layers):
         weights, biases = layer.get_weights()
         weights_biases["w{}".format(i)] = weights
         weights_biases["b{}".format(i)] = biases
 
-    saved_path = os.path.join(os.getcwd(), "models", "weights_biases.npz")
+    saved_path = os.path.join(os.getcwd(), "models", "{}.npz".format(filename))
     np.savez(saved_path, **weights_biases)
     return saved_path
 
