@@ -3,9 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import wavfile
 import scipy.signal as sps
-from models.models_lib import blue_model
-from models.models_lib import green_model
-from models.models_lib import red_model
+# from models.models_lib import blue_model
+# from models.models_lib import green_model
+# from models.models_lib import red_model
+from models.models_lib import rgb_yamnet
 import tensorflow as tf
 
 
@@ -137,48 +138,50 @@ sr, data = wavfile.read(blue_file)
 data = sps.resample(data, 8192)
 orig_data = data
 waveform = convert_spectrogram(data)
-s = blue_model.score(waveform[:128])
-print("\nFirst Score for Blue Data\n------------------------")
-print("Blue Score: {}".format(s))
+res = rgb_yamnet.score(waveform)
+print(res)
+# s = blue_model.score(waveform[:128])
+# print("\nFirst Score for Blue Data\n------------------------")
+# print("Blue Score: {}".format(s))
 
-data = get_data("blue.txt")
-data = convert_spectrogram(data)
-print("\nScores for Blue Data\n------------------------")
-s = blue_model.score(data)
-print("Blue Score: {}".format(s))
+# data = get_data("blue.txt")
+# data = convert_spectrogram(data)
+# print("\nScores for Blue Data\n------------------------")
+# s = blue_model.score(data)
+# print("Blue Score: {}".format(s))
 
-s = green_model.score(data)
-print("Green Score: {}".format(s))
+# s = green_model.score(data)
+# print("Green Score: {}".format(s))
 
-s = red_model.score(data)
-print("Red Score: {}".format(s))
+# s = red_model.score(data)
+# print("Red Score: {}".format(s))
 
-data = get_data("green.txt")
-data = convert_spectrogram(data)
-print("\n\nScores for Green Data\n------------------------")
-s = blue_model.score(data)
-print("Blue Score: {}".format(s))
+# data = get_data("green.txt")
+# data = convert_spectrogram(data)
+# print("\n\nScores for Green Data\n------------------------")
+# s = blue_model.score(data)
+# print("Blue Score: {}".format(s))
 
-s = green_model.score(data)
-print("Green Score: {}".format(s))
+# s = green_model.score(data)
+# print("Green Score: {}".format(s))
 
-s = red_model.score(data)
-print("Red Score: {}".format(s))
+# s = red_model.score(data)
+# print("Red Score: {}".format(s))
 
-data = get_data("red.txt")
-data = convert_spectrogram(data)
-print("\n\nScores for Red Data\n------------------------")
-s = blue_model.score(data)
-print("Blue Score: {}".format(s))
+# data = get_data("red.txt")
+# data = convert_spectrogram(data)
+# print("\n\nScores for Red Data\n------------------------")
+# s = blue_model.score(data)
+# print("Blue Score: {}".format(s))
 
-s = green_model.score(data)
-print("Green Score: {}".format(s))
+# s = green_model.score(data)
+# print("Green Score: {}".format(s))
 
-s = red_model.score(data)
-print("Red Score: {}".format(s))
+# s = red_model.score(data)
+# print("Red Score: {}".format(s))
 
-# show_blue_spectrogram()
-# show_green_spectrogram()
-# show_red_spectrogram()
+# # show_blue_spectrogram()
+# # show_green_spectrogram()
+# # show_red_spectrogram()
 
-show_color_spectrograph(orig_data)
+# show_color_spectrograph(orig_data)
